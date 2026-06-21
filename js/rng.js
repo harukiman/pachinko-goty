@@ -41,6 +41,16 @@
     return _rand() < Math.max(0, Math.min(1, spec.kakuhenRate + bonus));
   }
 
+  // ラウンド振り分け抽選（出玉に幅）。roundTable が無ければ spec.rounds 固定。
+  function drawRounds(spec) {
+    const tbl = spec.roundTable;
+    if (!tbl || !tbl.length) return spec.rounds;
+    let total = 0; for (const e of tbl) total += e.w;
+    let r = _rand() * total;
+    for (const e of tbl) { r -= e.w; if (r < 0) return e.r; }
+    return tbl[tbl.length - 1].r;
+  }
+
   // 確率配列から1件抽選（probs は合計1想定、誤差は末尾吸収）
   function pickByProb(items, probs) {
     let r = _rand();

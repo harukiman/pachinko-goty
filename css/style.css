@@ -189,8 +189,9 @@ img,canvas{max-width:100%;}
   animation:confettiFall linear forwards;}
 @keyframes confettiFall{from{transform:translateY(-10px) rotate(0);}to{transform:translateY(360px) rotate(720deg);}}
 
-/* シネマ（ストーリー/ムービー） */
-#cinema{z-index:13;background:#000;overflow:hidden;pointer-events:auto;}
+/* シネマ（ストーリー/ムービー）— 全画面の強制イベントとして表示 */
+#cinema{position:fixed;inset:0;z-index:1000;background:#000;overflow:hidden;pointer-events:auto;}
+#cinema .cine-skip{font-size:13px;}
 #cinema .cine-bg{position:absolute;inset:0;transition:background .4s;}
 /* レターボックス */
 #cinema .cine-bars::before,#cinema .cine-bars::after{content:'';position:absolute;left:0;right:0;
@@ -218,7 +219,7 @@ img,canvas{max-width:100%;}
 #cinema .cine-name{font-size:13px;font-weight:800;}
 #cinema .cine-text{font-size:clamp(13px,3.6vw,16px);line-height:1.5;color:#fff;min-height:1.4em;}
 #cinema .cine-skip{position:absolute;top:13%;right:8px;z-index:5;font-size:11px;color:rgba(255,255,255,.6);}
-#cinema.cine-shake{animation:shake .3s ease-in-out;}
+#cinema.cine-shake{animation:shakeHard .5s ease-out;}
 #cinema.cine-flash::after{content:'';position:absolute;inset:0;background:#fff;z-index:6;
   pointer-events:none;opacity:0;animation:boom .4s ease-out;}
 

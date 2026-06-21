@@ -33,7 +33,7 @@
 
   function opening() {
     return [
-      t('CR フレンズ伝説', '〜50年後の君へ〜', { bg: 'bg-legend', color: '#ff6ec7', dur: 1800 }),
+      t('FORTUNE FIRE', '〜200円から世界の頂点へ〜', { bg: 'bg-legend', color: '#ff6ec7', dur: 1800, fx: 'flash', shock: true }),
       { title: '', text: '西暦20XX——　ひしめくパチンコホール。', bgImg: 'bg_crowd.jpg', dur: 1600 },
       t('', 'パチンコで一億を稼ぎ「FIRE」を目指す者がいた。', { bg: 'bg-space', dur: 1700 }),
       { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: 'オレはピース小僧！　一億稼いで、絶対FIREしてやる！', bgImg: 'bg_skytree.jpg', fx: 'zoom', kb: true, dur: 1700 },
@@ -129,31 +129,43 @@
       { bg: 'bg-gold', fx: 'zoom', dur: 1300 }) ];
   }
 
-  // FIRE 到達エンディング（1億/5億/10億）
-  function ending(level) {
-    if (level >= 10) return [
-      t('💎 10億円 突破 💎', '', { bg: 'bg-aurora', fx: 'flash', shock: true, dur: 1500, color: '#ff6ec7' }),
-      sc('legend', '——10億。もはや伝説を超え、神話の領域だ。', { bg: 'bg-legend', form: 'ghost', kb: true, dur: 1900 }),
-      sc('peace', 'オレ…伝説のフレンズに、本当になれたんだ！', { bg: 'bg-aurora', form: 'awaken', fx: 'zoom', kb: true, dur: 1800 }),
-      t('THE LEGEND', '〜 君こそが伝説だ 〜', { bg: 'bg-legend', fx: 'burst', shock: true, dur: 2200, color: '#ff6ec7' }),
-    ];
-    if (level >= 5) return [
-      t('🏆 5億円 達成 🏆', '', { bg: 'bg-gold', fx: 'flash', shock: true, dur: 1400, color: '#ffd23b' }),
-      sc('hero', '5億だと…！？　もはや誰も止められん！', { bg: 'bg-gold', form: 'gold', fx: 'zoom', kb: true, dur: 1800 }),
-      sc('doya', 'ぐ…ぬ…見事だ、認めてやる…！', { bg: 'bg-fire', fx: 'shake', dur: 1600 }),
-      t('GRAND MASTER', '〜 伝説の途中 〜', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 1900, color: '#ffd23b' }),
-    ];
-    // 1億 = FIRE エンディング
-    return [
+  // ===== プレイヤー側 人生ストーリー（目標到達ムービー。パチンコ台のサーガとは別軸で連動）=====
+  // goal = { amt, level, name }
+  function ending(goal) {
+    const amt = (goal && goal.amt) || 1e8, name = (goal && goal.name) || 'FIRE達成';
+    const amtTxt = amt >= 1e12 ? (amt / 1e12) + '兆円' : amt >= 1e8 ? (amt / 1e8) + '億円' : (amt / 1e4) + '万円';
+    // 1億 = FIRE（人生が変わる瞬間。感動の章）
+    if (amt === 1e8) return [
       t('🎉 一億円 達成 🎉', '', { bg: 'bg-gold', fx: 'flash', shock: true, dur: 1500, color: '#ffd23b' }),
-      t('', 'ついに——目標の一億円に到達した。', { bg: 'bg-aurora', dur: 1700 }),
-      sc('peace', 'やった…やったぞ！　オレ、FIRE達成だ！！', { bg: 'bg-aurora', form: 'awaken', fx: 'zoom', kb: true, dur: 1900 }),
-      sc('pepper', 'おめでとう、相棒。計算上も完璧なFIREだ、ピピッ！', { bg: 'bg-space', kb: true, dur: 1600 }),
-      sc('legend', 'よくやった。君は自由を、自らの手で掴んだのだ。', { bg: 'bg-legend', form: 'ghost', kb: true, dur: 1900 }),
-      { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: '夜景を見ながら、ゆっくり生きるよ。ありがとう、みんな。', bgImg: 'bg_skytree.jpg', kb: true, dur: 2000 },
-      t('🌅 FIRE 達成 🌅', '〜 そして自由な人生へ 〜', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 2300, color: '#ffd23b' }),
-      t('ENDING', '— だが伝説は、まだ続く（5億/10億へ）—', { bg: 'bg-legend', dur: 2000, color: '#ff6ec7' }),
-    ];
+      t('', '——かつて財布に200円しかなかった男が、ついに。', { bg: 'bg-space', dur: 1800 }),
+      sc('peace', 'やった…やったぞ！　オレ、FIRE達成だ！！', { bg: 'bg-aurora', form: 'awaken', fx: 'zoom', kb: true, dur: 1800 }),
+      sc('pepper', 'おめでとう相棒。台の中の伝説が、現実になった瞬間だ。ピピッ。', { bg: 'bg-space', kb: true, dur: 1900 }),
+      sc('dog', '（…やったね。モモ、ずっと、ずっと信じてたワン）', { bg: 'bg-aurora', kb: true, dur: 1800 }),
+      { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: '夜景を見ながら、ゆっくり生きるよ。…ありがとう、みんな。', bgImg: 'bg_skytree.jpg', kb: true, dur: 2100 },
+      t('🌅 FIRE 達成 🌅', '〜 だが、これは新たな人生の幕開け 〜', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 2300, color: '#ffd23b' }) ];
+    // 100兆 = 真の最終エンディング
+    if (amt >= 1e14) return [
+      t('🌌 100兆円 🌌', '〜 世界の頂点 〜', { bg: 'bg-aurora', fx: 'flash', shock: true, dur: 1700, color: '#ff6ec7' }),
+      sc('legend', '100兆。もはや国家をも超えた。君は、歴史そのものだ。', { bg: 'bg-legend', form: 'ghost', fx: 'burst', kb: true, dur: 2100 }),
+      sc('peace', 'あの200円のオレが…世界のてっぺんに。夢って、叶うんだな。', { bg: 'bg-aurora', form: 'awaken', fx: 'zoom', kb: true, dur: 2100 }),
+      sc('dog', '（モモ、誇らしいワン。…ずっと、君のそばにいられて）', { bg: 'bg-aurora', kb: true, dur: 1900 }),
+      sc('black', 'フッ…見事だ。お前こそ、真の伝説だ。', { bg: 'bg-legend', form: 'dark', kb: true, dur: 1800 }),
+      t('THE TRUE LEGEND', '〜 君の物語は永遠に語り継がれる 〜 完', { bg: 'bg-legend', fx: 'burst', shock: true, dur: 2600, color: '#ff6ec7' }) ];
+    // 中間目標（5億〜10兆）：名称付きの人生ステージ。サーガのキャラがゲスト祝福。
+    const guest = amt >= 1e13 ? 'legend' : amt >= 1e12 ? 'hero' : amt >= 5e10 ? 'doya' : amt >= 1e10 ? 'gent' : amt >= 5e9 ? 'gorilla' : 'pepper';
+    const lines = {
+      legend: '10兆…時を超える私でさえ、見たことのない高みだ。',
+      hero: '1兆だと!?　もう人間をやめてる領域だぜ、相棒！',
+      doya: '500億…完全に格が違う。皇帝の称号、貴様に譲ろう。',
+      gent: '100億の大台。…お見事、と言わせていただきましょう。',
+      gorilla: 'ウホッ!?　50億…豪腕の私も、ひれ伏すしかない。',
+      pepper: `総資産 ${amtTxt}。計算が追いつかない…君は規格外だ、ピピッ。`,
+    };
+    return [
+      t(`🏆 ${amtTxt} 到達 🏆`, '〜 ' + name + ' 〜', { bg: 'bg-gold', fx: 'flash', shock: true, dur: 1600, color: '#ffd23b' }),
+      sc(guest, lines[guest], { bg: amt >= 1e12 ? 'bg-aurora' : 'bg-gold', form: guest === 'legend' ? 'ghost' : guest === 'hero' ? 'gold' : null, fx: 'zoom', kb: true, dur: 1900 }),
+      sc('peace', '止まらないぞ。次の景色を、この目で見るまでは！', { bg: 'bg-aurora', form: 'awaken', fx: 'burst', shock: true, kb: true, dur: 1900 }),
+      t(name.toUpperCase ? name : name, '〜 さらなる高みへ 〜', { bg: 'bg-legend', dur: 1700, color: '#ff6ec7' }) ];
   }
 
   // ===== 壮大なストーリー（章立てサーガ）。初当りごとに1章進行 =====
@@ -164,38 +176,62 @@
   function chapterCount() { return CHAPTERS.length; }
   function chapterTitle(i) { return CHAPTERS[Math.min(i, CHAPTERS.length - 1)]; }
   function chapter(i) {
-    const head = (sub, bg, col) => t(CHAPTERS[i], sub, { bg: bg || 'bg-legend', color: col || '#ff6ec7', dur: 1700, fx: 'flash' });
+    const head = (sub, bg, col) => t(CHAPTERS[i], sub, { bg: bg || 'bg-legend', color: col || '#ff6ec7', dur: 1700, fx: 'flash', shock: true });
     switch (i) {
       case 0: return [ head('〜 すべての始まり 〜'),
-        sc('peace', '一億稼いでFIREする。オレの伝説は今日から始まるんだ！', { bg: 'bg-aurora', fx: 'zoom', kb: true }),
-        sc('doya', 'フン、新入りか。ドヤ皇帝が世の厳しさを教えてやろう。', { bg: 'bg-fire', fx: 'zoom', kb: true, dur: 1700 }) ];
-      case 1: return [ head('〜 心強き仲間たち 〜', 'bg-space'),
-        sc('pepper', 'データ分析は任せろ、相棒。勝率を上げてみせる、ピピッ。', { bg: 'bg-space', kb: true }),
-        sc('dog', '（モモも一緒だワン！　幸運を呼ぶよ）', { bg: 'bg-aurora', kb: true, dur: 1400 }),
-        sc('peace', 'みんなとなら、どこまでも行ける気がする！', { bg: 'bg-aurora', fx: 'zoom', kb: true }) ];
+        sc(null, 'うだつの上がらない毎日。だが、彼には夢があった。', { bg: 'bg-space', dur: 1700 }),
+        sc('peace', '一億円を稼いでFIREする！　働かずに自由に生きるんだ！', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1700 }),
+        sc('dog', '（モモは知ってる…この人、昨日も財布に200円しかなかったワン）', { bg: 'bg-aurora', kb: true, dur: 1700 }),
+        sc('peace', '聞こえてるぞモモ!?　……でも、今日から本気だ。', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1600 }),
+        sc('doya', 'フッ、夢を見るのは自由だ。だが現実は甘くない。ドヤ皇帝が教えてやる。', { bg: 'bg-fire', fx: 'zoom', kb: true, dur: 1900 }),
+        t('伝説は、ここから始まる。', '', { bg: 'bg-thunder', fx: 'burst', shock: true, dur: 1500, color: '#ffd23b' }) ];
+      case 1: return [ head('〜 心強き仲間たち 〜', 'bg-space', '#9fe8ff'),
+        sc('pepper', '初めまして。データ分析ロボのペッパーだ。君の勝率、上げてみせる、ピピッ。', { bg: 'bg-space', kb: true, dur: 1800 }),
+        sc('peace', '相棒…！　心強いよ。で、いくら勝てる？', { bg: 'bg-space', fx: 'zoom', kb: true, dur: 1500 }),
+        sc('pepper', '計算結果：このままでは3日で破産。…ピピッ。', { bg: 'bg-space', kb: true, dur: 1600 }),
+        sc('peace', 'もっと優しい嘘をついてくれ!!', { bg: 'bg-aurora', fx: 'shake', kb: true, dur: 1400 }),
+        sc('dog', '（…それでも、モモはこの人を信じるワン）', { bg: 'bg-aurora', kb: true, dur: 1800 }),
+        sc('peace', 'みんな…ありがとう。仲間がいれば、どこまでも行ける！', { bg: 'bg-aurora', fx: 'burst', shock: true, kb: true, dur: 1800 }) ];
       case 2: return [ head('〜 腕力の試練 〜', 'bg-fire', '#ff8a00'),
-        sc('gian', 'おっせえなあ！　オレ様の拳、受けてみろ！', { bg: 'bg-fire', fx: 'zoom', kb: true }),
-        sc('peace', '力だけじゃない…粘りで勝つ！', { bg: 'bg-speed', fx: 'speed', dur: 1400 }) ];
+        sc('gian', 'おっせえなあ新入り！　オレ様、ガキ大将ガン太の出番だ！', { bg: 'bg-fire', fx: 'zoom', kb: true, dur: 1700 }),
+        sc('gian', 'お前のものはオレのもの！　お前の出玉もオレのもの！', { bg: 'bg-fire', fx: 'shake', kb: true, dur: 1700 }),
+        sc('peace', 'そのセリフ、どっかで聞いたぞ…！　でも玉は渡さない！', { bg: 'bg-speed', fx: 'speed', dur: 1600 }),
+        sc('peace', '力じゃ敵わない。なら、粘りと根性で勝つ——！', { bg: 'bg-thunder', fx: 'flash', shock: true, kb: true, dur: 1700 }) ];
       case 3: return [ head('〜 忍び寄る闇 〜', 'bg-thunder', '#ff3b3b'),
-        sc('general', '我が軍門に下れ。逆らえば容赦はせん。', { bg: 'bg-fire', form: 'dark', fx: 'shake', kb: true }),
-        sc('peace', 'こいつ…ただ者じゃない。でも引けない！', { bg: 'bg-thunder', fx: 'shake', dur: 1500 }) ];
+        sc(null, '勝ち進む彼の前に、本物の「組織」が動き出す。', { bg: 'bg-thunder', dur: 1700 }),
+        sc('general', '私は大元帥。我が軍門に下れ。さもなくば——破滅だ。', { bg: 'bg-fire', form: 'dark', fx: 'shake', kb: true, dur: 1900 }),
+        sc('peace', '（こいつ…これまでの相手とは、格が違う…！）', { bg: 'bg-thunder', fx: 'shake', dur: 1600 }),
+        sc('pepper', '相棒、勝率17%。…だが君は、いつも計算を超えてきた。', { bg: 'bg-space', kb: true, dur: 1800 }),
+        sc('peace', 'だったら…超えてやるさ。何度でも！', { bg: 'bg-thunder', fx: 'burst', shock: true, kb: true, dur: 1700 }) ];
       case 4: return [ head('〜 黄金の援軍 〜', 'bg-gold', '#ffd23b'),
-        sc('peace', 'もう限界かも…！', { bg: 'bg-space', fx: 'shake', dur: 1200 }),
-        sc('hero', '諦めるな！正義のイエローヒーロー、覚醒だ！', { bg: 'bg-gold', form: 'gold', fx: 'zoom', kb: true, se: 'kakutei' }),
-        t('黄金の力、解放！', '', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 1400, color: '#ffd23b' }) ];
+        sc('peace', 'ぐ…っ、もう、立ってられない…ここまでなのか…', { bg: 'bg-space', fx: 'shake', dur: 1700 }),
+        sc('dog', '（立って…！　お願い、立ってよ…！）', { bg: 'bg-space', kb: true, dur: 1600 }),
+        t('——その時、空が黄金に輝いた。', '', { bg: 'bg-gold', fx: 'flash', shock: true, dur: 1300, color: '#ffd23b' }),
+        sc('hero', '待たせたな！　正義のイエローヒーロー、覚醒参上ッ！', { bg: 'bg-gold', form: 'gold', fx: 'zoom', kb: true, se: 'kakutei', dur: 1900 }),
+        sc('peace', 'あんたは…！　なんで、オレなんかを助けて…', { bg: 'bg-gold', kb: true, dur: 1600 }),
+        sc('hero', '夢を諦めない奴を、ほっとけるかよ。さあ、一緒に掴むぞ——黄金を！', { bg: 'bg-aurora', form: 'gold', fx: 'burst', shock: true, kb: true, dur: 2000 }) ];
       case 5: return [ head('〜 立ちはだかる豪腕 〜', 'bg-fire', '#b06a2a'),
-        sc('gorilla', 'ウホ……この豪腕、砕けるものなら砕いてみろ。', { bg: 'bg-fire', form: 'dark', fx: 'shake', kb: true }),
-        sc('peace', '仲間がいる。だからオレは折れない！', { bg: 'bg-speed', fx: 'speed', dur: 1500 }) ];
+        sc('gorilla', 'ウホ……豪腕ゴリ将軍。この腕、砕けるものなら砕いてみろ。', { bg: 'bg-fire', form: 'dark', fx: 'shake', kb: true, dur: 1800 }),
+        sc('peace', '（でかい…壁みたいだ。心が、折れそうになる）', { bg: 'bg-thunder', fx: 'shake', dur: 1600 }),
+        sc('pepper', '思い出せ相棒。ここまで一緒に越えてきた仲間の顔を。', { bg: 'bg-space', kb: true, dur: 1700 }),
+        sc('peace', '……そうだ。オレは、一人じゃない。だから——折れない！！', { bg: 'bg-speed', fx: 'burst', shock: true, kb: true, dur: 1800 }) ];
       case 6: return [ head('〜 宇宙よりの刺客 〜', 'bg-space', '#9d86c4'),
-        sc('alien', 'ワレワレハ、キミノFIREヲ、ジャマシニキタ……', { bg: 'bg-space', fx: 'zoom', kb: true }),
-        sc('peace', '宇宙人まで!?　もう何でもアリだな…！', { bg: 'bg-aurora', fx: 'zoom', dur: 1400 }) ];
+        sc('alien', 'ワレワレハ宇宙人。キミノFIRE、ジャマシニキタ。', { bg: 'bg-space', fx: 'zoom', kb: true, dur: 1700 }),
+        sc('peace', '宇宙人まで来た!?　オレの夢、銀河規模で邪魔されてる!?', { bg: 'bg-space', fx: 'shake', kb: true, dur: 1600 }),
+        sc('alien', '……ジツハ、ワレモFIREシタイ。コツ、オシエテ。', { bg: 'bg-aurora', kb: true, dur: 1700 }),
+        sc('peace', '敵じゃないんかい！！　…まあいい、夢見る奴は皆、仲間だ。', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1800 }) ];
       case 7: return [ head('〜 決戦前夜 〜', 'bg-legend'),
-        { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: 'ここまで来た。あと少しで、夢に手が届く。', bgImg: 'bg_skytree.jpg', kb: true, dur: 1800 },
-        sc('legend', '最後の試練だ。己の伝説を、信じよ。', { bg: 'bg-legend', form: 'ghost', kb: true, dur: 1700 }) ];
+        { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: 'こんなに遠くまで来たんだな…全部、みんなのおかげだ。', bgImg: 'bg_skytree.jpg', kb: true, dur: 2000 },
+        sc('dog', '（明日、終わるんだね。…モモ、ずっとそばにいるワン）', { bg: 'bg-legend', kb: true, dur: 1900 }),
+        sc('peace', 'モモ…泣くなよ。…って、オレが泣いてどうすんだ。', { bg: 'bg-legend', kb: true, dur: 1700 }),
+        sc('legend', '50年後の君よ。明日、己の伝説を信じよ。運命は、その手の中だ。', { bg: 'bg-legend', form: 'ghost', kb: true, dur: 2100 }) ];
       default: return [ head('〜 闇のマスク、降臨 〜', 'bg-thunder', '#ff3b3b'),
-        sc('black', 'ここまで来たか…だが、伝説への扉は私が閉ざす！', { bg: 'bg-fire', form: 'dark', fx: 'burst', se: 'cutin', kb: true, dur: 1700 }),
-        sc('peace', '闇のマスク…！　お前を超えて、オレは伝説になる！！', { bg: 'bg-thunder', fx: 'flash', shock: true, kb: true, dur: 1700 }),
-        t('運命の最終決戦——！', '', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 1600, color: '#ffd23b' }) ];
+        sc('black', 'ここまで来たか、小僧。だが——伝説への扉は、この私が閉ざす！', { bg: 'bg-fire', form: 'dark', fx: 'burst', se: 'cutin', kb: true, dur: 2000 }),
+        sc('peace', '（こいつが…ラスボス。全身が震える。でも——）', { bg: 'bg-thunder', fx: 'shake', dur: 1600 }),
+        sc('peace', '——でも、もう怖くない。仲間がいる。夢がある！', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1700 }),
+        sc('black', 'ならば来い。貴様の覚悟、闇で塗り潰してくれる！', { bg: 'bg-fire', form: 'dark', fx: 'shake', kb: true, dur: 1800 }),
+        sc('peace', '闇のマスク——！　お前を超えて、オレは伝説になる！！', { bg: 'bg-thunder', fx: 'flash', shock: true, kb: true, dur: 1800 }),
+        t('運命の、最終決戦——！！', '', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 1800, color: '#ffd23b' }) ];
     }
   }
 

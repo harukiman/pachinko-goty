@@ -4,9 +4,18 @@
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.CONFIG;
-  const yen = n => '¥' + Math.floor(n).toLocaleString();
-  const oku = n => n >= 1e8 ? (n / 1e8).toFixed(2) + '億' : n >= 1e4 ? Math.floor(n / 1e4) + '万' : Math.floor(n) + '';
-  const RATE_LABEL = r => r + 'パチ(¥' + r + '/玉)';
+  // 一定以上は K/M/B/T で短縮表示
+  const yen = n => {
+    const s = n < 0 ? '-' : '', a = Math.abs(n);
+    if (a >= 1e12) return s + '¥' + (a / 1e12).toFixed(2) + 'T';
+    if (a >= 1e9) return s + '¥' + (a / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return s + '¥' + (a / 1e6).toFixed(2) + 'M';
+    if (a >= 1e5) return s + '¥' + Math.round(a / 1e3) + 'K';
+    return s + '¥' + Math.floor(a).toLocaleString();
+  };
+  const oku = n => n >= 1e12 ? (n / 1e12).toFixed(2) + '兆' : n >= 1e8 ? (n / 1e8).toFixed(2) + '億' : n >= 1e4 ? Math.floor(n / 1e4) + '万' : Math.floor(n) + '';
+  const rateUnit = r => r >= 1e8 ? (r / 1e8) + '億' : r >= 1e4 ? (r / 1e4) + '万' : '' + r;
+  const RATE_LABEL = r => rateUnit(r) + 'パチ';
 
   function render(st) {
     // 台情報
@@ -26,8 +35,9 @@
     me._val = st.money; me.textContent = newM;
     $('#bk-value').textContent = yen(st.ballValue);
     const p = $('#bk-profit'); p.textContent = (st.profit >= 0 ? '+' : '') + yen(st.profit); p.style.color = st.profit >= 0 ? '#39d353' : '#ff6b6b';
-    $('#fg-pct').textContent = st.goalPct.toFixed(st.goalPct < 10 ? 2 : 1) + '%';
-    $('#fg-detail').textContent = `(資産 ¥${oku(st.assets)} / 1億　📖${Math.min(st.storyChapter + 1, st.chapterCount)}/${st.chapterCount}章)`;
+    $('#fg-name').textContent = st.goalDone ? '全目標制覇！' : `${st.goalName}（¥${oku(st.goalNext)}）`;
+    $('#fg-pct').textContent = st.goalPct.toFixed(st.goalPct < 10 ? 1 : 0) + '%';
+    $('#fg-detail').textContent = `　資産 ¥${oku(st.assets)}　📖${Math.min(st.storyChapter + 1, st.chapterCount)}/${st.chapterCount}`;
     $('#fg-fill').style.width = Math.min(100, st.goalPct) + '%';
 
     // データカウンター
@@ -36,7 +46,8 @@
     $('#dc-maxren').textContent = st.maxRenchan;
     $('#dc-spins').textContent = st.spins;
     $('#dc-since').textContent = st.sinceHit;
-    $('#dc-prob').textContent = st.bigHits > 0 ? '1/' + Math.round(st.spins / st.bigHits) : '1/---';
+    $('#dc-prob').innerHTML = (st.bigHits > 0 ? '1/' + Math.round(st.spins / st.bigHits) : '1/---')
+      + (st.ceiling && st.state === 'normal' ? `　<span style="color:#ff5a36">天井 残${st.ceilingRemain}</span>` : '');
 
     // 電サポ/右打ち/RUSH
     const denkou = st.state === 'kakuhen' || st.state === 'jitan';
@@ -152,15 +163,17 @@
     try { opSeen = localStorage.getItem(OPKEY) === '1'; } catch (_) {}
     try { if (localStorage.getItem(FPKEY) === '1') { window.SETTINGS.fastProduction = true; const b = $('#toggle-fastprod'); b.classList.add('active'); b.textContent = '⏩ 演出も倍速 ON'; } } catch (_) {}
   }
-  function ensureBaseBgm() { if (baseStarted) return; baseStarted = true; if (window.AUDIO) window.AUDIO.setBaseBgm('normal'); }
+  // 通常BGM開始（OP未視聴の初回は鳴らさず、OP後に開始＝重なり防止）
+  function ensureBaseBgm() { if (baseStarted || !opSeen) return; baseStarted = true; if (window.AUDIO) window.AUDIO.setBaseBgm('normal'); }
 
   async function maybeOpening() {
     if (opSeen) return false;
     opSeen = true; try { localStorage.setItem(OPKEY, '1'); } catch (_) {}
-    ensureBaseBgm();
     if (window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY) {
       await window.CINEMA.play(window.STORY.opening(), { bgm: 'super', skippable: true });
     }
+    if (window.AUDIO) window.AUDIO.setBaseBgm('normal');   // OP終了後に通常BGM開始
+    baseStarted = true;
     if (localStorage.getItem(TUTKEY) !== '1') { showTutorial(); try { localStorage.setItem(TUTKEY, '1'); } catch (_) {} }
     return true;
   }

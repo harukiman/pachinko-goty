@@ -33,7 +33,16 @@
     titleEl = root.querySelector('.cine-title'); box = root.querySelector('.cine-box');
     nameEl = root.querySelector('.cine-name'); textEl = root.querySelector('.cine-text');
     skipEl = root.querySelector('.cine-skip');
-    root.addEventListener('pointerdown', () => { skipFlag = true; });
+    // スキップは「動かさずにタップ」した時だけ（スクロールでは閉じない）
+    let ps = null;
+    root.addEventListener('pointerdown', e => { ps = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+    root.addEventListener('pointerup', e => {
+      if (!ps) return;
+      const dx = Math.abs(e.clientX - ps.x), dy = Math.abs(e.clientY - ps.y), dt = Date.now() - ps.t;
+      ps = null;
+      if (dx < 12 && dy < 12 && dt < 500) skipFlag = true;
+    });
+    root.addEventListener('pointercancel', () => { ps = null; });
     inited = true;
   }
 
@@ -52,11 +61,11 @@
 
   function applyFx(kind) {
     if (!kind) return;
-    if (kind === 'shake') reflow(root, 'cine-shake');
-    else if (kind === 'flash') reflow(root, 'cine-flash');
-    else if (kind === 'zoom') reflow(charEl, 'cine-zoom');
-    else if (kind === 'speed') reflow(fxlayer, 'fx-speed');
-    else if (kind === 'burst') reflow(fxlayer, 'fx-burst');
+    if (kind === 'shake') { reflow(root, 'cine-shake'); if (A()) A().SE.pseudo(); }
+    else if (kind === 'flash') { reflow(root, 'cine-flash'); if (A()) A().SE.telop(); }
+    else if (kind === 'zoom') { reflow(charEl, 'cine-zoom'); }
+    else if (kind === 'speed') { reflow(fxlayer, 'fx-speed'); }
+    else if (kind === 'burst') { reflow(root, 'cine-shake'); reflow(fxlayer, 'fx-burst'); if (A()) A().SE.cutin(); }
   }
 
   async function playScene(s) {
@@ -103,8 +112,8 @@
 
   async function play(scenes, opts = {}) {
     init();
-    if (!scenes || !scenes.length) return;
-    if (playing) return;
+    if (!scenes || !scenes.length) return false;
+    if (playing) return false;             // 多重再生は再生せず false
     playing = true; skipFlag = false;
     root.classList.add('show');
     bars.classList.add('in');
@@ -123,6 +132,7 @@
       if (opts.bgm && A()) A().stopBgm();
       skipFlag = false; playing = false;
     }
+    return true;
   }
 
   window.CINEMA = { init, play, get isPlaying() { return playing; } };

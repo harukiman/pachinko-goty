@@ -139,6 +139,8 @@
   function scheduler() {
     if (!ctx) return;
     if (!activeKind) { stopSched(); return; }    // 無音時はタイマーを止める（CPU/電池節約）
+    // 再開時などにスケジュールが大きく遅れていたら詰め直す（音符の一斉発音=重なりを防止）
+    if (nextStepTime < ctx.currentTime - 0.3) nextStepTime = ctx.currentTime + 0.03;
     const ahead = 0.12, stepDur = () => 60 / songOf(activeKind).bpm / 4;
     while (nextStepTime < ctx.currentTime + ahead) {
       playStep(songOf(activeKind), step, nextStepTime);
