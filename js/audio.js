@@ -244,7 +244,10 @@
   function bindRecoveryListeners() {
     if (_listenersBound) return;
     _listenersBound = true;
-    const wake = () => { try { if (ctx) resume(); } catch (_) {} };
+    // resume() は ensure() でctxを生成するので、ctx未生成でも必ず呼ぶ。
+    // モバイルのautoplay解除は「ユーザー操作中のresume」でしか効かないため、
+    // pointerdown/touchstart 内で resume() を呼ぶこの経路が初回ロック解除の要。
+    const wake = () => { try { resume(); } catch (_) {} };
     try {
       if (typeof document !== 'undefined' && document.addEventListener) {
         document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
@@ -261,5 +264,7 @@
   bindRecoveryListeners();
 
   window.AUDIO = { resume, setVolume, setMuted, SE, startBgm, stopBgm, setBaseBgm, stopAllBgm,
-                   get isMuted() { return muted; } };
+                   get isMuted() { return muted; },
+                   // 診断用: 音が出ない時の内部状態を覗ける（無害なゲッター）
+                   get debug() { return { ctx: ctx && ctx.state, activeKind, baseKind, sched: !!schedTimer, muted, volume }; } };
 })();

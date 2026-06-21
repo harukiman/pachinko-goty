@@ -234,6 +234,12 @@
   }
 
   function bindControls() {
+    // 最初のユーザー操作（どのUIでも）で音を解禁＋常時BGM開始 ＝「音が出ない」対策の保険。
+    // audio.js 側でも pointerdown で resume するが、こちらは常時BGMの開始まで担保する。
+    const unlock = () => { try { window.AUDIO.resume(); ensureBaseBgm(); } catch (_) {} };
+    document.addEventListener('pointerdown', unlock);
+    document.addEventListener('touchstart', unlock, { passive: true });
+
     const fire = $('#fire');
     const start = async e => {
       e.preventDefault(); window.AUDIO.resume(); ensureBaseBgm();
