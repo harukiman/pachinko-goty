@@ -435,7 +435,7 @@
         const b = balls2d[i];
         b.vy += 0.18; b.y += b.vy; b.x += b.vx;
         pegs.forEach(p => { const dx = b.x - p.x, dy = b.y - p.y;
-          if (dx * dx + dy * dy < 30) { b.vx = dx > 0 ? 1 : -1; b.vy *= 0.6; if (window.AUDIO) {} } });
+          if (dx * dx + dy * dy < 30) { b.vx = dx > 0 ? 1 : -1; b.vy *= 0.6; if (window.AUDIO && Math.random() < 0.18) window.AUDIO.SE.peg(); } });
         laneCtx.beginPath(); laneCtx.arc(b.x, b.y, 3.2, 0, 7); laneCtx.fill();
         if (b.y > H) balls2d.splice(i, 1);
       }
@@ -446,5 +446,5 @@
   window.GAME = { init, fireStart, fireStop, setAuto, setSpec, addBalls, forcePlay,
                   lendBalls, cashOut, setRate, setSpeed, addMoney, resetSave, save, setUchikata,
                   getAchievements, spendMoney, payBail, get money() { return S.money; },
-                  snapshot, get isBusy() { return S.busy; } };
+                  snapshot, get isBusy() { return S.busy; }, get isAuto() { return S.auto; } };
 })();

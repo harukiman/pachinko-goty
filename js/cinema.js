@@ -15,7 +15,11 @@
  */
 (function () {
   const $ = s => document.querySelector(s);
-  const effSpeed = () => (window.SETTINGS && window.SETTINGS.fastProduction) ? (window.SPEED || 1) : 1;
+  const effSpeed = () => {
+    const s = window.SPEED || 1;
+    if ((window.SETTINGS && window.SETTINGS.fastProduction) || s >= 5 || (window.GAME && window.GAME.isAuto)) return s;
+    return 1;
+  };
   const sleep = ms => new Promise(r => setTimeout(r, ms / effSpeed()));
   const A = () => window.AUDIO;
 
@@ -39,7 +43,7 @@
     for (let i = 0; i < text.length; i++) {
       if (skipFlag) { textEl.textContent = text; return; }
       textEl.textContent += text[i];
-      if (text[i] !== ' ' && text[i] !== '　' && A()) A().SE.su(1);
+      if (text[i] !== ' ' && text[i] !== '　' && A() && effSpeed() <= 3 && i % 2 === 0) A().SE.su(1);
       await sleep(30);
     }
   }

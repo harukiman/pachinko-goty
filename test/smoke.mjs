@@ -77,7 +77,7 @@ const document = {
 
 // ---- Audio / Image / timers スタブ ----
 class FakeImage { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0); } get src() { return this._src; } }
-const FparamN = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} });
+const FparamN = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {}, cancelScheduledValues() {} });
 const Fnode = () => ({ connect: () => Fnode(), disconnect() {}, start() {}, stop() {} });
 class FakeAC {
   constructor() { this.currentTime = 0; this.state = 'running'; this.sampleRate = 44100; this.destination = Fnode(); }

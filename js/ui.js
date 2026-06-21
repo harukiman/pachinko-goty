@@ -267,6 +267,11 @@
       try { localStorage.setItem(FPKEY, on ? '1' : '0'); } catch (_) {}
     });
 
+    // UIクリックの触感（軽いtick）
+    ['#shop', '#shop2', '#uchi', '#panel'].forEach(sel => {
+      const e = $(sel); if (e) e.addEventListener('click', ev => { if (ev.target.closest('button,select') && window.AUDIO && window.AUDIO.SE.tick) window.AUDIO.SE.tick(); }, true);
+    });
+
     // 実績パネル
     $('#achievements').addEventListener('click', openAch);
     $('#ach-close').addEventListener('click', () => $('#ach-modal').classList.add('hidden'));

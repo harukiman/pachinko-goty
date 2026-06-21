@@ -6,8 +6,12 @@
  */
 (function () {
   const $ = sel => document.querySelector(sel);
-  // 演出は基本×1。設定「演出も倍速」ON時のみ倍率を適用。
-  const effSpeed = () => (window.SETTINGS && window.SETTINGS.fastProduction) ? (window.SPEED || 1) : 1;
+  // 演出速度: 「演出も倍速」ON / 倍速×5以上 / オート中 は倍率適用、それ以外は×1で堪能。
+  const effSpeed = () => {
+    const s = window.SPEED || 1;
+    if ((window.SETTINGS && window.SETTINGS.fastProduction) || s >= 5 || (window.GAME && window.GAME.isAuto)) return s;
+    return 1;
+  };
   const sleep = ms => new Promise(r => setTimeout(r, ms / effSpeed()));
   const A = () => window.AUDIO;
 
@@ -31,6 +35,7 @@
 
   function flashBoom() { flash.classList.remove('boom'); void flash.offsetWidth; flash.classList.add('boom'); }
   function shake() { screen.classList.remove('shake'); void screen.offsetWidth; screen.classList.add('shake'); }
+  function shakeHard() { const c = document.getElementById('cabinet') || screen; c.classList.remove('shake-hard'); void c.offsetWidth; c.classList.add('shake-hard'); }
 
   // SU予告（step段階だけ表示）
   async function playSU(step) {
@@ -150,8 +155,8 @@
     const btn = button.querySelector('.push-btn');
     const onPress = () => { pressed = true; };
     btn.addEventListener('pointerdown', onPress, { once: true });
-    const t0 = Date.now();
-    while (!pressed && Date.now() - t0 < 1200) await sleep(60);
+    const t0 = Date.now(), wait = 1200 / effSpeed();
+    while (!pressed && Date.now() - t0 < wait) await sleep(60);
     btn.removeEventListener('pointerdown', onPress);
     if (A()) A().SE.push();
     flashBoom(); shake();
@@ -172,7 +177,7 @@
   async function playVConfirm() {
     show(vflash);
     if (A()) A().SE.vflash();
-    flashBoom();
+    flashBoom(); shakeHard();
     await sleep(700);
     hide(vflash);
   }
@@ -245,7 +250,7 @@
       ? (kakuhen ? '🎉 確変 大当り 🎉' : '🎊 大当り 🎊')
       : 'ハズレ…';
     show(result);
-    if (win) { flashBoom(); shake(); if (A()) (kakuhen ? A().SE.kakuhen() : A().SE.fanfare()); }
+    if (win) { flashBoom(); shakeHard(); if (A()) (kakuhen ? A().SE.kakuhen() : A().SE.fanfare()); }
     else if (A()) A().SE.lose();
     await sleep(win ? 1600 : 800);
     hide(result);
@@ -267,12 +272,13 @@
     await playSU(prod.su.step);
     await playPseudo(prod.pseudo.count);
 
-    // 予告ムービー（通常スピンにもふんだんに）
+    // 予告ムービー（通常スピンにもふんだんに。高倍速時は冷遇スキップ）
     const storyReady = window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY;
     if (storyReady) {
       const hot = prod.hit || prod.su.step >= 3 || ['red', 'gold', 'rainbow'].includes(prod.hold.id)
         || (prod.reach && prod.reach.kind !== 'none' && prod.reach.kind !== 'normal');
-      const chance = hot ? 0.9 : 0.2;
+      const fast = (window.SPEED || 1) >= 5;
+      const chance = hot ? 0.9 : (fast ? 0 : 0.1);
       if (Math.random() < chance) await window.CINEMA.play(window.STORY.yokoku(hot), {});
     }
 
@@ -336,16 +342,17 @@
       s.className = 'pip' + (r <= roundNo ? ' on' : '');
       pips.appendChild(s);
     }
-    // 出玉カウントアップ
+    // 出玉カウントアップ（イーズアウト＋上昇ピッチで気持ちよく）
     const payEl = roundFx.querySelector('.round-payout');
-    const steps = 8, inc = payout / steps;
-    for (let k = 0; k < steps; k++) {
-      roundTotalPayout += inc;
-      payEl.innerHTML = `${Math.round(roundTotalPayout)}<small>玉</small>`;
-      if (A()) A().SE.payout();
+    const startVal = roundTotalPayout, steps = 10;
+    for (let k = 1; k <= steps; k++) {
+      const e = 1 - Math.pow(1 - k / steps, 2);
+      payEl.innerHTML = `${Math.round(startVal + payout * e)}<small>玉</small>`;
+      if (A()) A().SE.payout(1400 + k * 130);
       if (onBall) onBall();
-      await sleep(55);
+      await sleep(45);
     }
+    roundTotalPayout = startVal + payout;
     await sleep(160);
     if (roundNo === total) { hide(roundFx); playConfetti(1600); }
   }
