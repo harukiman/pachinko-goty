@@ -77,14 +77,18 @@ const document = {
 
 // ---- Audio / Image / timers スタブ ----
 class FakeImage { set src(v) { this._src = v; if (this.onload) setTimeout(() => this.onload(), 0); } get src() { return this._src; } }
+const FparamN = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} });
+const Fnode = () => ({ connect: () => Fnode(), disconnect() {}, start() {}, stop() {} });
 class FakeAC {
-  constructor() { this.currentTime = 0; this.state = 'running'; this.sampleRate = 44100;
-    this.destination = {}; }
-  createGain() { return { gain: { value: 1, setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: () => ({ connect: () => {} }) }; }
-  createOscillator() { return { type: '', frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: () => ({ connect: () => {} }), start() {}, stop() {} }; }
+  constructor() { this.currentTime = 0; this.state = 'running'; this.sampleRate = 44100; this.destination = Fnode(); }
+  createGain() { return Object.assign(Fnode(), { gain: FparamN() }); }
+  createOscillator() { return Object.assign(Fnode(), { type: '', frequency: FparamN(), detune: FparamN() }); }
   createBuffer() { return { getChannelData: () => new Float32Array(8) }; }
-  createBufferSource() { return { buffer: null, connect: () => ({ connect: () => ({ connect: () => ({ connect: () => {} }) }) }), start() {}, stop() {} }; }
-  createBiquadFilter() { return { type: '', frequency: { value: 0 }, connect: () => ({ connect: () => ({ connect: () => {} }) }) }; }
+  createBufferSource() { return Object.assign(Fnode(), { buffer: null }); }
+  createBiquadFilter() { return Object.assign(Fnode(), { type: '', frequency: FparamN(), Q: FparamN() }); }
+  createWaveShaper() { return Object.assign(Fnode(), { curve: null, oversample: 'none' }); }
+  createDelay() { return Object.assign(Fnode(), { delayTime: FparamN() }); }
+  createDynamicsCompressor() { return Object.assign(Fnode(), { threshold: FparamN(), knee: FparamN(), ratio: FparamN(), attack: FparamN(), release: FparamN() }); }
   resume() {}
 }
 

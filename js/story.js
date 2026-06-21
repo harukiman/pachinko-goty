@@ -103,6 +103,27 @@
     return [ t('時短 突入', 'チャンス継続！', { bg: 'bg-gold', fx: 'flash', dur: 1300, color: '#ffd23b' }) ];
   }
 
+  // 予告ムービー（通常スピンにもふんだんに。1シーンの短尺）
+  function yokoku(hot) {
+    const allies = ['peace', 'pepper', 'dog', 'mosaic'];
+    const hots = ['hero', 'legend', 'black', 'doya', 'gent', 'cool'];
+    const who = pick(hot ? hots : allies.concat(hots));
+    const coolLines = ['……これは、来るぞ。', '流れが変わった——！', '気配がする…激アツだ！', 'ここからが本番だ。'];
+    const calmLines = ['お、なんか起きそう？', 'チャンス…かも？', 'ふむ、どうなる…', '今日はツイてるかも。', '一玉入魂、いくぞ。'];
+    const form = who === 'black' ? 'dark' : who === 'legend' ? 'ghost' : who === 'hero' ? 'gold' : null;
+    return [ sc(who, pick(hot ? coolLines : calmLines), {
+      bg: hot ? pick(['bg-thunder', 'bg-fire', 'bg-aurora']) : pick(['bg-space', 'bg-aurora']),
+      fx: hot ? pick(['flash', 'zoom', 'speed']) : null, form, kb: true, dur: hot ? 1300 : 1000,
+    }) ];
+  }
+
+  // ノーマルリーチ用の短尺ムービー
+  function normalReach() {
+    const who = pick(['doya', 'gian', 'jono', 'mosaic', 'pepper']);
+    return [ sc(who, pick(['ノーマルから一発逆転だ！', 'ここで決める…！', '油断は禁物だぜ。', '揃え——！']),
+      { bg: 'bg-fire', fx: 'zoom', kb: true, dur: 1300 }) ];
+  }
+
   function victory(renchan) {
     return [ sc('peace', renchan >= 3 ? `${renchan}連!! 止まらない、これが伝説の力だ！` : 'よし、勝った——！',
       { bg: 'bg-gold', fx: 'zoom', dur: 1300 }) ];
@@ -135,5 +156,5 @@
     ];
   }
 
-  window.STORY = { CHARS: C, opening, battle, legend, awaken, victory, ending };
+  window.STORY = { CHARS: C, opening, battle, legend, awaken, victory, ending, yokoku, normalReach };
 })();

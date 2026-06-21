@@ -74,9 +74,11 @@
     hide(reach);
 
     const kind = reachDef.kind;
+    const storyOn2 = window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY;
     if (kind === 'normal') {
       msg('ノーマルリーチ…');
-      await sleep(900);
+      if (storyOn2) await window.CINEMA.play(window.STORY.normalReach(), { bgm: 'super' });
+      await sleep(700);
       return;
     }
 
@@ -87,6 +89,7 @@
     if (kind === 'super') {
       msg('スーパーリーチ発展！');
       await playTelop('チャンス！', '#1380ff');
+      if (storyOn) await window.CINEMA.play(window.STORY.battle('super'), { bgm: 'super' });
       await cutInImage(reachDef.img, reachDef.label, 1100, '#3af0ff');
       await sleep(600);
     } else if (kind === 'cutin') {
@@ -263,6 +266,15 @@
 
     await playSU(prod.su.step);
     await playPseudo(prod.pseudo.count);
+
+    // 予告ムービー（通常スピンにもふんだんに）
+    const storyReady = window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY;
+    if (storyReady) {
+      const hot = prod.hit || prod.su.step >= 3 || ['red', 'gold', 'rainbow'].includes(prod.hold.id)
+        || (prod.reach && prod.reach.kind !== 'none' && prod.reach.kind !== 'normal');
+      const chance = hot ? 0.9 : 0.2;
+      if (Math.random() < chance) await window.CINEMA.play(window.STORY.yokoku(hot), {});
+    }
 
     // 左→右 停止
     window.REELS.stop(0, finalSyms[0]);
