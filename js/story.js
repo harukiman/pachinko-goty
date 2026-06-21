@@ -208,7 +208,8 @@
   // 各章は［笑い→緊張→涙→決意→引き］＋幕間で、アニメ作品級の尺と情感に。
   const CHAPTERS = [
     '第一章 旅立ち', '第二章 仲間との出会い', '第三章 ガキ大将の試練', '第四章 闇の前哨戦',
-    '第五章 黄金の援軍', '第六章 豪腕の壁', '第七章 宇宙よりの刺客', '第八章 決戦前夜', '最終章 闇のマスク',
+    '第五章 黄金の援軍', '第六章 豪腕の壁', '第七章 宇宙よりの刺客', '第八章 母の面影',
+    '第九章 雨夜の誓い', '第十章 決戦前夜', '第十一章 闇の素顔', '最終章 闇のマスク',
   ];
   function chapterCount() { return CHAPTERS.length; }
   function chapterTitle(i) { return CHAPTERS[Math.min(i, CHAPTERS.length - 1)]; }
@@ -226,6 +227,10 @@
         sc('peace', '（笑って生きろ、か。…分かってるよ、母さん。だから、笑える未来を、自分で掴む。）', { bg: 'bg-aurora', form: 'awaken', kb: true, dur: 2300 }),
         sc('doya', 'フッ、夢を見るのは自由だ。だが現実は甘くない。ドヤ皇帝が教えてやる。', { bg: 'bg-fire', fx: 'zoom', kb: true, dur: 1900 }),
         sc('peace', '上等だ。その現実、ひっくり返してやる！', { bg: 'bg-speed', fx: 'speed', dur: 1500 }),
+        nar('——幕間。出発前、彼は近所の定食屋に立ち寄った。', { bgImg: 'bg_diner.svg', dur: 1800 }),
+        sc('peace', '大将、いつもの……は頼めないや。今日は水だけで。…でも、必ず戻って大盛り頼むよ。', { bgImg: 'bg_diner.svg', kb: true, dur: 2200 }),
+        sc('dog', '（店のおばちゃん、こっそりコロッケ一個、紙に包んでくれたワン。…世の中、捨てたもんじゃないワン）', { bgImg: 'bg_diner.svg', kb: true, dur: 2300 }),
+        sc('peace', '（あったかい。…この恩、いつか倍にして返す。これも、オレが立ち上がる理由だ。）', { bgImg: 'bg_diner.svg', kb: true, dur: 2200 }),
         t('伝説は、ここから始まる。', '', { bg: 'bg-thunder', fx: 'burst', shock: true, dur: 1600, color: '#ffd23b' }) ];
 
       case 1: return [ head('〜 心強き仲間たち 〜', 'bg-space', '#9fe8ff'),
@@ -251,7 +256,11 @@
         sc('gian', '…どうせ、オレなんか誰も相手にしねえ。だから、奪うしかねえんだよ。', { bg: 'bg-space', form: 'dark', kb: true, dur: 2100 }),
         sc('peace', 'ガン太。…奪わなくたって、一緒に打てばいいだろ。玉は分けてやる。腹も、減ってんだろ？', { bg: 'bg-aurora', kb: true, dur: 2200 }),
         sc('gian', '……っ。な、なんだよ、その顔。調子狂うじゃねえか…！', { bg: 'bg-fire', kb: true, dur: 1800 }),
-        sc('peace', '力じゃ敵わない。でも、粘りと根性なら負けない。——いくぞ、ガン太！今日は共闘だ！', { bg: 'bg-thunder', fx: 'flash', shock: true, kb: true, dur: 2000 }) ];
+        sc('peace', '力じゃ敵わない。でも、粘りと根性なら負けない。——いくぞ、ガン太！今日は共闘だ！', { bg: 'bg-thunder', fx: 'flash', shock: true, kb: true, dur: 2000 }),
+        nar('——幕間。決着のあと、二人は河原で缶コーヒーを分け合った。', { bgImg: 'bg_dawn.svg', dur: 1800 }),
+        sc('gian', '…なあ。オレ、ガキの頃から「いらねえ子」って言われ続けてさ。だから、強がってた。', { bgImg: 'bg_dawn.svg', kb: true, dur: 2300 }),
+        sc('peace', 'いらない奴なんて、いないさ。…現に、お前がいないと、このコーヒー、甘すぎて飲めねえ。', { bgImg: 'bg_dawn.svg', kb: true, dur: 2200 }),
+        sc('gian', 'なんだそりゃ!!　…けっ。覚えとけよ、その夢、オレも手伝ってやる。子分じゃねえ、仲間としてな。', { bgImg: 'bg_dawn.svg', fx: 'zoom', kb: true, dur: 2300 }) ];
 
       case 3: return [ head('〜 忍び寄る闇 〜', 'bg-thunder', '#ff3b3b'),
         nar('勝ち進む彼の前に、ついに本物の「組織」が動き出す。', { bgImg: 'bg_hell.svg', dur: 1900 }),
@@ -282,7 +291,11 @@
         sc('gorilla', 'ウホ…働き者だな。…嫌いじゃない、その生き様。', { bg: 'bg-fire', kb: true, dur: 1700 }),
         sc('pepper', '思い出せ相棒。ここまで一緒に越えてきた、仲間の顔を。', { bgImg: 'bg_cosmos.svg', kb: true, dur: 1800 }),
         sc('peace', '……そうだ。モモ、ペッパー、ガン太、ヒーロー…オレは、一人じゃない。', { bg: 'bg-aurora', kb: true, dur: 2000 }),
-        sc('peace', 'だから——折れない！！　この壁、ぶち破ってやる！！', { bg: 'bg-speed', fx: 'burst', shock: true, kb: true, dur: 1900 }) ];
+        sc('peace', 'だから——折れない！！　この壁、ぶち破ってやる！！', { bg: 'bg-speed', fx: 'burst', shock: true, kb: true, dur: 1900 }),
+        nar('——幕間。その夜、ゴリ将軍は黙って、バナナを一房、置いていった。', { bgImg: 'bg_rooftop.svg', dur: 1900 }),
+        sc('gorilla', 'ウホ。…明日も、バイトなのだろう。食え。倒れられては、壁としての沽券に関わる。', { bgImg: 'bg_rooftop.svg', kb: true, dur: 2200 }),
+        sc('peace', '将軍…！　あんた、不器用すぎる優しさだな。…ありがたく、いただくよ。', { bgImg: 'bg_rooftop.svg', kb: true, dur: 2100 }),
+        sc('pepper', '（記録更新。敵対者から味方への転向、本日二例目。…この男の周りでは、計算が崩壊する。）', { bgImg: 'bg_cosmos.svg', kb: true, dur: 2200 }) ];
 
       case 6: return [ head('〜 宇宙よりの刺客 〜', 'bg-space', '#9d86c4'),
         sc('alien', 'ワレワレハ宇宙人。キミノFIRE、ジャマシニキタ。', { bg: 'bg-space', fx: 'zoom', kb: true, dur: 1700 }),
@@ -293,17 +306,67 @@
         sc('alien', 'キミ、笑ウ。ツライ時モ、笑ウ。…ナゼ？', { bg: 'bg-space', kb: true, dur: 1700 }),
         sc('peace', '母さんの教えさ。「笑って生きろ」って。…笑ってりゃ、いつか本当に笑える日が来る。', { bg: 'bg-aurora', form: 'awaken', kb: true, dur: 2300 }),
         sc('alien', '……ナルホド。ソレガ、地球ノ、最強ノ、テクノロジー。', { bg: 'bg-aurora', kb: true, dur: 1900 }),
-        sc('peace', '夢見る奴は、星が違っても、みんな仲間だ。一緒にFIREしようぜ、ゼ！', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1900 }) ];
+        sc('peace', '夢見る奴は、星が違っても、みんな仲間だ。一緒にFIREしようぜ、ゼ！', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1900 }),
+        sc('alien', '……ヤクソク。母星デ、待ツ。ソノ時ハ、地球ノ「肉まん」、馳走シテ。', { bg: 'bg-aurora', kb: true, dur: 1900 }),
+        sc('peace', '宇宙の果てまで肉まんの約束か。…いいぜ、銀河一の大盛りで待っててやる！', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1900 }) ];
 
-      case 7: return [ head('〜 決戦前夜 〜', 'bg-legend'),
+      // 第八章 母の面影 — 涙の山場。母の墓前で、夢の原点に立ち返る。
+      case 7: return [ head('〜 母の面影 〜', 'bg-aurora', '#ff9ec0'),
+        nar('連戦の疲れが、ふいに足を止めさせた。彼は、久しぶりに母の墓を訪れていた。', { bgImg: 'bg_grave.svg', dur: 2100 }),
+        sc('peace', '母さん、久しぶり。…痩せたって？　まあ、軍資金が200円スタートだったからね。', { bgImg: 'bg_grave.svg', kb: true, dur: 2200 }),
+        sc('peace', '覚えてる？　オレが子供の頃、母さん、夜なべして内職してさ。それでも、いつも笑ってた。', { bgImg: 'bg_grave.svg', kb: true, dur: 2400 }),
+        sc('dog', '（ハルの手、ちょっと震えてるワン。…我慢してるんだワン、ずっと）', { bgImg: 'bg_grave.svg', kb: true, dur: 2100 }),
+        nar('——あの日。幼いハルは、病室の母に、こう尋ねた。', { bg: 'bg-aurora', dur: 1900 }),
+        sc('peace', '（「ねえ母さん、お金ないのに、なんでいつも笑ってるの？」って聞いたんだ。）', { bg: 'bg-aurora', form: 'awaken', kb: true, dur: 2300 }),
+        sc('peace', '（母さんは言った。「笑ってる人の周りには、人が集まる。人が集まれば、ひとりじゃない。それが一番の財産よ」）', { bg: 'bg-aurora', form: 'awaken', kb: true, dur: 2700 }),
+        sc('peace', '…母さん。オレ、やっと意味が分かったよ。ペッパーも、モモも、ガン太も、みんな…集まってくれた。', { bgImg: 'bg_grave.svg', kb: true, dur: 2500 }),
+        sc('peace', '一億は、まだだ。でも、母さんの言う一番の財産は、もう……手に入れてたんだな。', { bgImg: 'bg_grave.svg', kb: true, dur: 2400 }),
+        sc('pepper', '（…相棒の頬の水分量、急上昇。私は、何も言わず、隣に立つことを選択する。それが、最適解だ。）', { bgImg: 'bg_cosmos.svg', kb: true, dur: 2400 }),
+        sc('peace', '行ってくるよ、母さん。…ちゃんと、笑って勝ってくる。', { bgImg: 'bg_grave.svg', fx: 'zoom', kb: true, dur: 2100 }),
+        t('夢の原点を、胸に。', '', { bg: 'bg-aurora', fx: 'flash', dur: 1700, color: '#ff9ec0' }) ];
+
+      // 第九章 雨夜の誓い — モモを拾った雨の日の回想。原点の再確認と引き。
+      case 8: return [ head('〜 雨夜の誓い 〜', 'bg-thunder', '#7fa6d8'),
+        nar('決戦を前に、季節外れの冷たい雨が降った。彼は傘もささず、立ち尽くしていた。', { bgImg: 'bg_rain.svg', dur: 2100 }),
+        sc('peace', 'この雨…思い出すな。モモ、お前を拾ったのも、こんな夜だった。', { bgImg: 'bg_rain.svg', kb: true, dur: 2200 }),
+        sc('dog', '（覚えてるワン。段ボールの中で、もう動けなくて。…諦めかけてたワン）', { bgImg: 'bg_rain.svg', kb: true, dur: 2200 }),
+        nar('——あの夜。財布には、最後の小銭。彼は迷わず、それでパンを買った。', { bgImg: 'bg_rain.svg', dur: 2100 }),
+        sc('peace', '（自分が食う分か、こいつを助けるか。…一秒も、迷わなかった。)', { bgImg: 'bg_rain.svg', kb: true, dur: 2200 }),
+        sc('peace', 'ずぶ濡れのお前を抱えて、オレ、声に出して誓ったんだ。「もう、ひとりにしない」って。', { bgImg: 'bg_rain.svg', kb: true, dur: 2400 }),
+        sc('dog', '（あの言葉が、モモの全部だワン。だからモモも誓ったワン。…この人の夢、絶対に守るって）', { bgImg: 'bg_rain.svg', kb: true, dur: 2500 }),
+        sc('pepper', '相棒。傘を持ってきた。…非効率だと分かっている。それでも、濡れる君を放っておけなかった。', { bgImg: 'bg_rain.svg', kb: true, dur: 2400 }),
+        sc('peace', 'ははっ…ロボのくせに、優しすぎだろ。…ありがとな。雨も、悪くないな。仲間と見れば。', { bgImg: 'bg_rain.svg', kb: true, dur: 2300 }),
+        sc('peace', '200円のあの日から、何ひとつ、ブレてない。誰も凍えさせない——その夢のために、勝つ！', { bgImg: 'bg_rain.svg', fx: 'burst', shock: true, kb: true, dur: 2200 }),
+        t('やがて、雨は上がる。', '', { bg: 'bg-thunder', dur: 1700, color: '#7fa6d8' }) ];
+
+      // 第十章 決戦前夜 — 旧第八章の名場面（夜景・全仲間の想い）
+      case 9: return [ head('〜 決戦前夜 〜', 'bg-legend'),
         { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: 'こんなに遠くまで来たんだな…。200円のオレが、こんな夜景を見てる。全部、みんなのおかげだ。', bgImg: 'bg_skytree.jpg', kb: true, dur: 2400 },
         sc('dog', '（明日、すべてが終わるんだね。…モモ、白状するワン。ずっと、言えなかったこと）', { bg: 'bg-legend', kb: true, dur: 2100 }),
         sc('dog', '（あの雨の日、ハルがパンをくれなかったら、モモは生きてなかったワン。…だから、命の恩人なんだワン）', { bg: 'bg-legend', kb: true, dur: 2500 }),
         sc('peace', 'バカ。逆だよモモ。お前がいたから、オレは独りじゃなかった。…救われたのは、オレの方だ。', { bg: 'bg-legend', kb: true, dur: 2400 }),
         sc('peace', '…って、なんでオレが泣いてんだ。明日は笑って勝つって決めたのに。', { bg: 'bg-legend', kb: true, dur: 1900 }),
+        sc('gian', 'よお、湿っぽい顔すんなよ大将。…みんな、屋上に集まってんぜ。お前の景気づけだとよ。', { bgImg: 'bg_rooftop.svg', kb: true, dur: 2200 }),
+        sc('peace', 'みんな……来てくれたのか。ガン太、将軍、ヒーロー、ゼまで…！', { bgImg: 'bg_rooftop.svg', fx: 'zoom', kb: true, dur: 2100 }),
+        sc('hero', '言ったろ？　夢を諦めない奴は、ほっとけねえ。明日は、全員、お前の背中についてるぜ。', { bgImg: 'bg_rooftop.svg', form: 'gold', kb: true, dur: 2300 }),
         sc('pepper', '相棒。私のメモリに、君との全記録が刻まれている。…どれも、削除したくないデータばかりだ。', { bgImg: 'bg_cosmos.svg', kb: true, dur: 2300 }),
         sc('legend', '50年後の君よ。明日、己の伝説を信じよ。運命は——いつだって、その手の中にある。', { bg: 'bg-legend', form: 'ghost', kb: true, dur: 2300 }),
         t('そして、夜が明ける。', '', { bg: 'bg-thunder', dur: 1600, color: '#ff6ec7' }) ];
+
+      // 第十一章 闇の素顔 — 宿敵の過去。神社で、かつての夢追い人の真実が明かされる。
+      case 10: return [ head('〜 闇の素顔 〜', 'bg-thunder', '#ff3b3b'),
+        nar('決戦の地へ向かう途中、ハルは古びた神社で、ひとり佇む闇のマスクと出会う。', { bgImg: 'bg_shrine.svg', dur: 2100 }),
+        sc('black', '…ここは、私が最後に願掛けをした場所だ。あの日も、私は本気で夢を信じていた。', { bgImg: 'bg_shrine.svg', form: 'dark', kb: true, dur: 2300 }),
+        sc('peace', 'あんたにも、こんな場所が…。…何があったんだ。なんで、夢を憎むようになった。', { bgImg: 'bg_shrine.svg', kb: true, dur: 2200 }),
+        nar('かつて彼もまた、200円から頂点を目指した、ひとりの若者だった。', { bgImg: 'bg_shrine.svg', dur: 2000 }),
+        sc('black', '私は、あと一歩で頂に届いた。だが、独りだった。…誰も、隣にいなかった。', { bgImg: 'bg_shrine.svg', form: 'dark', kb: true, dur: 2400 }),
+        sc('black', '掴んだ栄光は、分かち合う者がなく、ただ冷たかった。…だから私は、夢そのものを呪った。', { bgImg: 'bg_shrine.svg', form: 'dark', kb: true, dur: 2500 }),
+        sc('peace', '……そうか。あんたは、勝ったのに、ひとりぼっちだったのか。', { bgImg: 'bg_shrine.svg', kb: true, dur: 2100 }),
+        sc('dog', '（かわいそうだワン…。この人、ずっと、寒い場所にいたんだワン）', { bgImg: 'bg_shrine.svg', kb: true, dur: 2100 }),
+        sc('peace', '闇のマスク。明日、オレはあんたを倒す。でも、あんたを否定はしない。…あんたは、オレの未来かもしれない。', { bgImg: 'bg_shrine.svg', kb: true, dur: 2500 }),
+        sc('peace', 'だから証明する。仲間と掴んだ夢は、あったかいんだって。…あんたが見れなかった景色を、見せてやる。', { bgImg: 'bg_shrine.svg', fx: 'zoom', kb: true, dur: 2500 }),
+        sc('black', '……フン。減らず口を。…せいぜい、その甘い理想ごと、砕いてくれよう。', { bgImg: 'bg_shrine.svg', form: 'dark', fx: 'shake', kb: true, dur: 2100 }),
+        t('交わる、二つの夢の果て。', '', { bg: 'bg-thunder', fx: 'flash', dur: 1700, color: '#ff3b3b' }) ];
 
       default: return [ head('〜 闇のマスク、降臨 〜', 'bg-thunder', '#ff3b3b'),
         sc('black', 'ここまで来たか、小僧。だが——伝説への扉は、この私が閉ざす！', { bgImg: 'bg_hell.svg', form: 'dark', fx: 'burst', se: 'cutin', kb: true, dur: 2100 }),
@@ -311,6 +374,8 @@
         nar('闇のマスク。その正体は、かつて夢に破れ、夢を憎むようになった、もう一人の夢追い人。', { bgImg: 'bg_hell.svg', dur: 2200 }),
         sc('black', '夢など叶わぬ。私がそうだった。だから、お前の夢も——壊させてもらう！', { bgImg: 'bg_hell.svg', form: 'dark', fx: 'shake', kb: true, dur: 2100 }),
         sc('peace', 'あんたも、夢を見てたのか。…だったら、なおさら退けない。', { bg: 'bg-thunder', kb: true, dur: 1900 }),
+        sc('peace', '神社で言ったよな。あんたは、勝ったのにひとりだった。…オレは、違う。後ろを見てみろ！', { bgImg: 'bg_arena.svg', fx: 'zoom', kb: true, dur: 2200 }),
+        sc('black', 'なに…？　貴様の背後に、あの数の影…仲間、だと…。馬鹿な、これが…温もり、なのか…！', { bgImg: 'bg_arena.svg', form: 'dark', fx: 'shake', kb: true, dur: 2300 }),
         sc('peace', '——もう怖くない。仲間がいる。夢がある。母さんの言葉がある！', { bg: 'bg-aurora', fx: 'zoom', kb: true, dur: 1900 }),
         sc('dog', '（行け、ハル！　モモたちの想い、全部、その一玉に込めて——！）', { bg: 'bg-aurora', kb: true, dur: 1900 }),
         sc('black', 'ならば来い。貴様の覚悟、この闇で塗り潰してくれる！', { bgImg: 'bg_hell.svg', form: 'dark', fx: 'shake', kb: true, dur: 1800 }),

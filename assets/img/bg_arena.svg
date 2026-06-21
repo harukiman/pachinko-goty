@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="arsky" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#4a0e2a"/><stop offset="60%" stop-color="#220630"/><stop offset="100%" stop-color="#0a0218"/>
+    </radialGradient>
+    <linearGradient id="arbeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff3b6e" stop-opacity=".6"/><stop offset="100%" stop-color="#ff3b6e" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#arsky)"/>
+  <g fill="url(#arbeam)">
+    <path d="M120 0 L60 600 L180 600 L200 0 Z"/><path d="M680 0 L620 600 L740 600 L600 0 Z"/><path d="M400 0 L360 600 L440 600 L400 0 Z"/>
+  </g>
+  <g stroke="#ff6e9e" stroke-width="2" opacity=".5" fill="none">
+    <ellipse cx="400" cy="500" rx="320" ry="70"/><ellipse cx="400" cy="500" rx="200" ry="44"/>
+  </g>
+  <g fill="#ffd23b" opacity=".8"><circle cx="150" cy="80" r="3"/><circle cx="650" cy="80" r="3"/><circle cx="400" cy="60" r="3"/><circle cx="280" cy="100" r="2.4"/><circle cx="520" cy="100" r="2.4"/></g>
+</svg>
