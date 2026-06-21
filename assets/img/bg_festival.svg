@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="fssky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1d0f30"/><stop offset="100%" stop-color="#3a1742"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#fssky)"/>
+  <g opacity=".9">
+    <circle cx="180" cy="120" r="46" fill="#ff5a7a"/><circle cx="180" cy="120" r="46" fill="none" stroke="#ffd23b" stroke-width="3"/>
+    <circle cx="620" cy="90" r="38" fill="#5ad1ff"/>
+    <circle cx="400" cy="160" r="30" fill="#ffd23b"/>
+  </g>
+  <g stroke="#ffd23b" stroke-width="2" opacity=".5">
+    <line x1="0" y1="40" x2="800" y2="80"/><line x1="0" y1="80" x2="800" y2="40"/>
+  </g>
+  <g fill="#ff8a3b">
+    <rect x="60" y="300" width="200" height="40" rx="6"/><rect x="540" y="300" width="200" height="40" rx="6"/>
+  </g>
+  <g fill="#c43b3b"><rect x="80" y="340" width="160" height="160"/><rect x="560" y="340" width="160" height="160"/></g>
+  <g fill="#ffe9b0" opacity=".9"><rect x="100" y="360" width="120" height="40" rx="6"/><rect x="580" y="360" width="120" height="40" rx="6"/></g>
+  <rect x="0" y="500" width="800" height="100" fill="#241338"/>
+  <g fill="#ffd98a" opacity=".8"><circle cx="120" cy="240" r="6"/><circle cx="300" cy="220" r="5"/><circle cx="500" cy="230" r="6"/><circle cx="690" cy="210" r="5"/></g>
+</svg>

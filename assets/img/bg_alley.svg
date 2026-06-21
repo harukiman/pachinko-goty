@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="alsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1430"/><stop offset="100%" stop-color="#33203f"/>
+    </linearGradient>
+    <radialGradient id="allamp" cx="30%" cy="20%" r="40%">
+      <stop offset="0%" stop-color="#ffcf6e" stop-opacity=".55"/><stop offset="100%" stop-color="#ffcf6e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#alsky)"/>
+  <rect width="800" height="600" fill="url(#allamp)"/>
+  <polygon points="0,0 360,140 360,600 0,600" fill="#241a38"/>
+  <polygon points="800,0 440,140 440,600 800,600" fill="#2c2042"/>
+  <rect x="360" y="140" width="80" height="460" fill="#160f26"/>
+  <g fill="#ff8a3b" opacity=".75">
+    <rect x="120" y="200" width="36" height="80" rx="4"/><rect x="640" y="220" width="34" height="90" rx="4"/>
+  </g>
+  <g fill="#3af0ff" opacity=".55">
+    <rect x="180" y="320" width="28" height="70" rx="4"/><rect x="600" y="300" width="26" height="64" rx="4"/>
+  </g>
+  <rect x="40" y="430" width="60" height="120" fill="#120c20"/>
+  <rect x="700" y="430" width="60" height="120" fill="#120c20"/>
+  <ellipse cx="400" cy="580" rx="220" ry="34" fill="#ffcf6e" opacity=".12"/>
+</svg>

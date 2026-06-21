@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="pksky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bfe3ff"/><stop offset="60%" stop-color="#e6f3ff"/><stop offset="100%" stop-color="#cfe9c9"/>
+    </linearGradient>
+    <radialGradient id="pksun" cx="78%" cy="18%" r="22%">
+      <stop offset="0%" stop-color="#fff7d8" stop-opacity=".95"/><stop offset="100%" stop-color="#fff7d8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#pksky)"/>
+  <rect width="800" height="600" fill="url(#pksun)"/>
+  <rect x="0" y="430" width="800" height="170" fill="#7fb06a"/>
+  <rect x="0" y="430" width="800" height="10" fill="#9ccd84"/>
+  <path d="M0 470 Q400 440 800 470 L800 600 L0 600 Z" fill="#6aa257"/>
+  <g>
+    <rect x="120" y="300" width="26" height="150" fill="#6a4a2a"/>
+    <ellipse cx="133" cy="280" rx="100" ry="78" fill="#5a9a44"/>
+    <ellipse cx="133" cy="280" rx="70" ry="52" fill="#69ad50"/>
+  </g>
+  <g>
+    <rect x="650" y="320" width="22" height="130" fill="#6a4a2a"/>
+    <ellipse cx="661" cy="305" rx="84" ry="64" fill="#5a9a44"/>
+  </g>
+  <rect x="320" y="392" width="160" height="14" rx="6" fill="#8a5a2e"/>
+  <rect x="334" y="406" width="10" height="44" fill="#6a4a2a"/><rect x="456" y="406" width="10" height="44" fill="#6a4a2a"/>
+  <g fill="#f4f9ff" opacity=".85">
+    <ellipse cx="220" cy="90" rx="60" ry="26"/><ellipse cx="560" cy="60" rx="74" ry="30"/>
+  </g>
+</svg>
