@@ -105,9 +105,13 @@
     body.innerHTML = '';
     body.appendChild(el('div', 'mg-info', '準備にいくら賭ける？（高いほど成功率UP）'));
     body.appendChild(el('p', 'mg-warn', '失敗すると保釈金として所持金の25%を没収（上限なし）。3連続失敗で示談金が必要に。'));
+    // 名簿屋(DARK index 3)以上は危険度が高く、「手ぶら(無準備)」での決行は不可。
+    const idx = DARK.indexOf(job);
+    const tiers = idx >= 3 ? TIERS.filter(t => t.cost > 0) : TIERS;
+    if (idx >= 3) body.appendChild(el('p', 'mg-warn', '※この案件は危険度が高く、手ぶらでの決行はできません（最低限の準備が必須）。'));
     const list = el('div', 'mg-list');
     const wanted = window.GAME.snapshot().wanted;
-    TIERS.forEach(tier => {
+    tiers.forEach(tier => {
       const cost = tier.cost * (job.cmod || 1);                 // 上位ほど必要投資UP
       const eff = Math.max(0.04, Math.min(0.96, tier.rate * (job.rmod || 1)));  // 上位ほど手ぶら成功率DOWN
       const shown = window.GAME.wantedRate(eff);                // 実行時と同じ「手配度反映後」の成功率を表示
