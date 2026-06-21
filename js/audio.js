@@ -132,36 +132,98 @@
       [659.25, 880, 1108.7, 1318.5].forEach((f, i) =>
         tone({ freq: f, type: 'sawtooth', dur: 0.15, gain: 0.28, when: i * 0.08 }));
     },
+
+    // チャンスボタン出現「ピコーン」
+    button() {
+      tone({ freq: 880, type: 'square', dur: 0.1, gain: 0.22 });
+      tone({ freq: 1320, type: 'square', dur: 0.18, gain: 0.2, when: 0.08, slideTo: 1760 });
+    },
+
+    // ボタン押下「ドンッ！」（インパクト強）
+    push() {
+      noise({ dur: 0.3, gain: 0.5, lp: 2600, hp: 40 });
+      tone({ freq: 110, type: 'sine', dur: 0.35, gain: 0.55, slideTo: 45 });
+      tone({ freq: 1500, type: 'square', dur: 0.06, gain: 0.22 });
+    },
+
+    // 確定音「ピロリーン↑↑」（最上位プレミア・明るい上昇分散和音）
+    kakutei() {
+      const run = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
+      run.forEach((f, i) => tone({ freq: f, type: 'square', dur: 0.12, gain: 0.3, when: i * 0.06 }));
+      [1046.5, 1318.5, 1567.98].forEach(f => tone({ freq: f, type: 'triangle', dur: 0.7, gain: 0.22, when: 0.4 }));
+      noise({ dur: 0.6, gain: 0.18, lp: 9000, hp: 3000, when: 0.36 });
+    },
+
+    // V入賞「キィン！」
+    vflash() {
+      tone({ freq: 1318.5, type: 'square', dur: 0.5, gain: 0.32, slideTo: 2637 });
+      noise({ dur: 0.25, gain: 0.3, lp: 9000, hp: 2000 });
+    },
+
+    // テロップ出現「シュバッ」
+    telop() {
+      tone({ freq: 1800, type: 'sawtooth', dur: 0.18, gain: 0.2, slideTo: 400 });
+      noise({ dur: 0.16, gain: 0.18, lp: 6000, hp: 1500 });
+    },
+
+    // 昇格音「ファーン↑」
+    upgrade() {
+      [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+        tone({ freq: f, type: 'sawtooth', dur: 0.16, gain: 0.26, when: i * 0.1 }));
+    },
+
+    // 群予告「ザワザワ…」（ノイズ上昇＋低音うねり）
+    swarm() {
+      noise({ dur: 0.9, gain: 0.22, lp: 1600, hp: 120 });
+      tone({ freq: 70, type: 'sawtooth', dur: 0.9, gain: 0.18, slideTo: 160 });
+    },
   };
 
   // ---- BGM（ループ）----
-  // スーパーリーチ等のテンションBGM。stop()返却で止める。
-  function startBgm(kind = 'super') {
-    stopBgm();
+  // overlay(リーチ/大当り) を startBgm で再生し、stopBgm で base(確変中) へ自動復帰する。
+  const TRACKS = {
+    super:   { tempo: 0.18, type: 'square',   notes: [220, 261.63, 329.63, 392, 329.63, 261.63] },
+    allreel: { tempo: 0.14, type: 'sawtooth', notes: [261.63, 329.63, 392, 523.25, 659.25, 523.25, 392, 329.63] },
+    round:   { tempo: 0.16, type: 'square',   kick: true, lead: true,
+               notes: [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46] },
+    kakuhen: { tempo: 0.15, type: 'square',   kick: true,
+               notes: [440, 554.37, 659.25, 554.37, 493.88, 587.33, 739.99, 587.33] },
+  };
+
+  let current = null;   // 現在の停止関数
+  let baseKind = null;  // 復帰先トラック（確変中など）
+
+  function _play(kind) {
     ensure();
-    let stopped = false;
-    const tempo = kind === 'allreel' ? 0.14 : 0.18;
-    // 緊張感のあるアルペジオ進行
-    const scales = {
-      super:   [220, 261.63, 329.63, 392, 329.63, 261.63],
-      allreel: [261.63, 329.63, 392, 523.25, 659.25, 523.25, 392, 329.63],
-    };
-    const seq = scales[kind] || scales.super;
-    let i = 0;
+    const tr = TRACKS[kind] || TRACKS.super;
+    let stopped = false, i = 0, timer = null;
     const tick = () => {
       if (stopped) return;
-      const f = seq[i % seq.length];
-      tone({ freq: f, type: 'square', dur: tempo * 0.9, gain: 0.16 });
-      tone({ freq: f / 2, type: 'triangle', dur: tempo * 0.9, gain: 0.1 });
+      const f = tr.notes[i % tr.notes.length];
+      tone({ freq: f, type: tr.type, dur: tr.tempo * 0.9, gain: 0.15 });
+      tone({ freq: f / 2, type: 'triangle', dur: tr.tempo * 0.9, gain: 0.1 });        // ベース
+      if (tr.lead) tone({ freq: f * 2, type: 'square', dur: tr.tempo * 0.5, gain: 0.06 });
+      if (tr.kick && i % 4 === 0) noise({ dur: 0.08, gain: 0.16, lp: 600, hp: 30 });   // キック
       i++;
-      bgmTimer = setTimeout(tick, tempo * 1000);
+      timer = setTimeout(tick, tr.tempo * 1000);
     };
-    let bgmTimer = setTimeout(tick, 0);
-    bgmStop = () => { stopped = true; clearTimeout(bgmTimer); };
-    return bgmStop;
+    timer = setTimeout(tick, 0);
+    return () => { stopped = true; clearTimeout(timer); };
   }
-  function stopBgm() { if (bgmStop) { bgmStop(); bgmStop = null; } }
+  function _stopCurrent() { if (current) { current(); current = null; } }
 
-  window.AUDIO = { resume, setVolume, setMuted, SE, startBgm, stopBgm,
+  // overlay 再生（リーチ・大当り中）
+  function startBgm(kind = 'super') { _stopCurrent(); current = _play(kind); }
+  // overlay 停止 → base があれば復帰
+  function stopBgm() { _stopCurrent(); if (baseKind) current = _play(baseKind); }
+  // base 設定（確変中など。null で解除）
+  function setBaseBgm(kind) {
+    baseKind = kind || null;
+    if (!current && baseKind) current = _play(baseKind);
+  }
+  // 全停止（base も解除）
+  function stopAllBgm() { baseKind = null; _stopCurrent(); }
+
+  window.AUDIO = { resume, setVolume, setMuted, SE, startBgm, stopBgm, setBaseBgm, stopAllBgm,
                    get isMuted() { return muted; } };
 })();

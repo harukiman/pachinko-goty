@@ -126,6 +126,7 @@
     } catch (e) {
       console.error('consume error:', e);
       if (window.PRODUCTION) window.PRODUCTION.hideAll();
+      if (window.AUDIO) window.AUDIO.stopBgm();
     } finally {
       S.busy = false;
       refresh();
@@ -139,21 +140,29 @@
     S.holds = []; // 大当りで保留クリア（止め打ち）
     refresh();
     const spec = S.spec;
+    if (window.AUDIO) { window.AUDIO.setBaseBgm(null); window.AUDIO.startBgm('round'); }
+    // 昇格演出（7R以上のスペックで稀に低Rスタート→昇格）
+    if (spec.rounds >= 7 && Math.random() < 0.45) {
+      await window.PRODUCTION.playUpgrade(Math.random() < 0.5 ? 3 : 5, spec.rounds);
+    }
     for (let r = 1; r <= spec.rounds; r++) {
       const pay = spec.payoutPerRound;
       S.balls += pay;
-      await window.PRODUCTION.playRound(r, spec.rounds, pay, () => { S.balls += 0; refresh(); });
+      await window.PRODUCTION.playRound(r, spec.rounds, pay, () => refresh());
       refresh();
     }
+    if (window.AUDIO) window.AUDIO.stopBgm(); // ラウンドBGM終了
     // 大当り後の状態
     if (willKakuhen) { S.kakuhen = true; S.jitan = false; }
     else { S.kakuhen = false; S.jitan = true; }
     S.stRemaining = spec.stCount;
+    if (window.AUDIO) window.AUDIO.setBaseBgm(S.kakuhen ? 'kakuhen' : null); // 確変中BGM
     refresh();
   }
 
   function endST() {
     S.kakuhen = false; S.jitan = false; S.stRemaining = 0; S.renchan = 0;
+    if (window.AUDIO) window.AUDIO.stopAllBgm();
     window.PRODUCTION.msg('通常モードへ戻りました');
     refresh();
   }
@@ -163,6 +172,7 @@
     if (!C.SPECS[key] || S.busy) return;
     S.specKey = key; S.spec = C.SPECS[key];
     S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
+    if (window.AUDIO) window.AUDIO.stopAllBgm();
     refresh();
   }
 

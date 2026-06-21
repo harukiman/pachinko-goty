@@ -9,16 +9,22 @@
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const A = () => window.AUDIO;
 
-  let screen, flash, cutin, su, reach, result, message;
+  let screen, flash, swarm, cutin, su, reach, telop, button, kakutei, vflash, result, confetti, message;
   function init() {
-    screen = $('#screen'); flash = $('#fx-flash'); cutin = $('#fx-cutin');
-    su = $('#fx-su'); reach = $('#fx-reach'); result = $('#fx-result'); message = $('#fx-message');
+    screen = $('#screen'); flash = $('#fx-flash'); swarm = $('#fx-swarm'); cutin = $('#fx-cutin');
+    su = $('#fx-su'); reach = $('#fx-reach'); telop = $('#fx-telop'); button = $('#fx-button');
+    kakutei = $('#fx-kakutei'); vflash = $('#fx-vflash'); result = $('#fx-result');
+    confetti = $('#fx-confetti'); message = $('#fx-message');
   }
 
   function show(el) { el.classList.add('show'); }
   function hide(el) { el.classList.remove('show'); }
-  function hideAll() { [flash, cutin, su, reach, result].forEach(hide);
-    screen.classList.remove('rainbow'); cutin.querySelector('img').src = ''; }
+  function hideAll() {
+    [flash, swarm, cutin, su, reach, telop, button, kakutei, vflash, result, confetti].forEach(hide);
+    screen.classList.remove('rainbow');
+    cutin.querySelector('img').src = '';
+    swarm.innerHTML = ''; confetti.innerHTML = '';
+  }
   function msg(t) { message.textContent = t || ''; }
 
   function flashBoom() { flash.classList.remove('boom'); void flash.offsetWidth; flash.classList.add('boom'); }
@@ -77,21 +83,137 @@
 
     if (kind === 'super') {
       msg('スーパーリーチ発展！');
+      await playTelop('チャンス！', '#1380ff');
       await cutInImage(reachDef.img, reachDef.label, 1100, '#3af0ff');
-      await sleep(700);
+      await sleep(600);
     } else if (kind === 'cutin') {
       const gold = reachDef.id === 'cutin_gold';
       msg(gold ? '金カットイン!!!' : '激熱カットイン!!');
+      await playSwarm();                                   // 群予告
+      await playTelop(gold ? '激アツ確定級!!' : '激熱!!', gold ? '#d4a800' : '#c00');
       shake();
       await cutInImage(reachDef.img, reachDef.label, 1300, gold ? '#ffd23b' : '#ff3b3b');
-      await sleep(700);
+      await sleep(600);
     } else if (kind === 'allreel') {
       msg('全回転リーチ……当確!?');
       screen.classList.add('rainbow');
+      await playSwarm();
+      await playTelop('当 確 !?', '#b3008f');
       await cutInImage(reachDef.img, '伝説の全回転', 1800, '#ff6ec7');
-      await sleep(900);
+      await sleep(800);
     }
     if (A()) A().stopBgm();
+  }
+
+  // 群予告（ザワッと影が湧く）
+  async function playSwarm() {
+    swarm.innerHTML = '';
+    for (let i = 0; i < 26; i++) {
+      const d = document.createElement('span');
+      d.className = 'swarm-dot';
+      d.style.left = Math.random() * 100 + '%';
+      d.style.animationDuration = (0.7 + Math.random() * 0.5) + 's';
+      d.style.animationDelay = (Math.random() * 0.3) + 's';
+      swarm.appendChild(d);
+    }
+    show(swarm);
+    if (A()) A().SE.swarm();
+    await sleep(900);
+    hide(swarm); swarm.innerHTML = '';
+  }
+
+  // テロップ（激熱！等）
+  async function playTelop(text, color) {
+    telop.querySelector('.telop-text').textContent = text;
+    if (color) telop.querySelector('.telop-text').style.background =
+      `linear-gradient(90deg,rgba(0,0,0,0),${color} 20%,${color} 80%,rgba(0,0,0,0))`;
+    show(telop);
+    if (A()) A().SE.telop();
+    await sleep(650);
+    hide(telop);
+  }
+
+  // チャンスボタン（押下 or 自動でドンッ）
+  async function playButton(label) {
+    button.querySelector('.push-btn').textContent = label || 'PUSH!';
+    show(button);
+    if (A()) A().SE.button();
+    let pressed = false;
+    const btn = button.querySelector('.push-btn');
+    const onPress = () => { pressed = true; };
+    btn.addEventListener('pointerdown', onPress, { once: true });
+    const t0 = Date.now();
+    while (!pressed && Date.now() - t0 < 1200) await sleep(60);
+    btn.removeEventListener('pointerdown', onPress);
+    if (A()) A().SE.push();
+    flashBoom(); shake();
+    hide(button);
+  }
+
+  // 確定演出（虹＋確定テロップ＋確定音）
+  async function playKakutei() {
+    screen.classList.add('rainbow');
+    show(kakutei);
+    if (A()) A().SE.kakutei();
+    flashBoom();
+    await sleep(1200);
+    hide(kakutei);
+  }
+
+  // V入賞
+  async function playVConfirm() {
+    show(vflash);
+    if (A()) A().SE.vflash();
+    flashBoom();
+    await sleep(700);
+    hide(vflash);
+  }
+
+  // 昇格演出（ラウンド数アップ）
+  async function playUpgrade(fromR, toR) {
+    show(reach);
+    const rt = reach.querySelector('.reach-text');
+    rt.style.color = '#3af0ff';
+    rt.textContent = fromR + 'R...';
+    await sleep(500);
+    if (A()) A().SE.upgrade();
+    rt.style.color = '#ffd23b';
+    rt.textContent = '▲ ' + toR + 'R 昇格!!';
+    flashBoom();
+    await sleep(800);
+    rt.style.color = '';
+    hide(reach);
+  }
+
+  // 紙吹雪（一定時間後に自動消去）
+  function playConfetti(dur = 1800) {
+    confetti.innerHTML = '';
+    const colors = ['#ff3b3b', '#ffd23b', '#3af0ff', '#39d353', '#ff6ec7', '#fff'];
+    for (let i = 0; i < 44; i++) {
+      const s = document.createElement('span');
+      s.className = 'confetti-piece';
+      s.style.left = Math.random() * 100 + '%';
+      s.style.background = colors[i % colors.length];
+      s.style.animationDelay = (Math.random() * 0.5) + 's';
+      s.style.animationDuration = (0.9 + Math.random() * 0.9) + 's';
+      confetti.appendChild(s);
+    }
+    show(confetti);
+    setTimeout(() => { hide(confetti); confetti.innerHTML = ''; }, dur);
+  }
+
+  // 当り確定までの煽りシーケンス
+  async function playWinSequence(prod, kakuhen) {
+    const k = prod.reach || {};
+    const premium = kakuhen || k.id === 'cutin_gold' || k.id === 'allreel' || Math.random() < 0.5;
+    // スーパー以上はチャンスボタンで決める
+    if (k.kind === 'super' || k.kind === 'cutin' || k.kind === 'allreel') {
+      await playButton(premium ? '激アツ PUSH!!' : 'PUSH!');
+    }
+    if (premium) await playKakutei();      // 確定演出
+    await showResult(true, kakuhen);
+    playConfetti(1800);
+    await sleep(300);
   }
 
   // カットイン画像表示
@@ -164,10 +286,11 @@
     } else {
       window.REELS.stop(1, finalSyms[1], { tenpai });
     }
-    await sleep(500);
+    await sleep(450);
 
     const win = window.REELS.isAllMatch(finalSyms);
-    await showResult(win, win && willKakuhen);
+    if (win) await playWinSequence(prod, willKakuhen);
+    else await showResult(false, false);
     hideAll(); msg('');
     return win;
   }
@@ -181,6 +304,8 @@
 
   // ラウンド中の出玉演出
   async function playRound(roundNo, total, payout, onBall) {
+    if (roundNo === 1) await playVConfirm();          // 初回はV入賞
+    if (roundNo === 1 || roundNo === total) playConfetti(1400);
     msg(`大当り ${roundNo}/${total}R  獲得 ${payout}玉`);
     for (let k = 0; k < 6; k++) {
       if (A()) A().SE.payout();
@@ -189,5 +314,6 @@
     }
   }
 
-  window.PRODUCTION = { init, run, playRound, cutInImage, showResult, hideAll, msg };
+  window.PRODUCTION = { init, run, playRound, playUpgrade, playKakutei, playConfetti,
+                        cutInImage, showResult, hideAll, msg };
 })();
