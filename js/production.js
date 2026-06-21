@@ -20,7 +20,7 @@
   function show(el) { el.classList.add('show'); }
   function hide(el) { el.classList.remove('show'); }
   function hideAll() {
-    [flash, swarm, cutin, su, reach, telop, button, kakutei, vflash, result, confetti].forEach(hide);
+    [flash, swarm, cutin, su, reach, telop, button, kakutei, vflash, result, confetti, $('#fx-round')].forEach(el => el && hide(el));
     screen.classList.remove('rainbow');
     cutin.querySelector('img').src = '';
     swarm.innerHTML = ''; confetti.innerHTML = '';
@@ -302,16 +302,35 @@
     show(result); await sleep(600); hide(result);
   }
 
-  // ラウンド中の出玉演出
-  async function playRound(roundNo, total, payout, onBall) {
-    if (roundNo === 1) await playVConfirm();          // 初回はV入賞
+  // ラウンド中の出玉演出（液晶に大きくラウンド/出玉カウンター）
+  let roundFx, roundTotalPayout = 0;
+  async function playRound(roundNo, total, payout, onBall, opts = {}) {
+    roundFx = roundFx || $('#fx-round');
+    if (roundNo === 1) { roundTotalPayout = 0; await playVConfirm(); }
     if (roundNo === 1 || roundNo === total) playConfetti(1400);
-    msg(`大当り ${roundNo}/${total}R  獲得 ${payout}玉`);
-    for (let k = 0; k < 6; k++) {
+    show(roundFx);
+    roundFx.querySelector('.round-head').textContent =
+      `${opts.kakuhen ? '確変' : ''}BONUS  ${roundNo} / ${total}R`;
+    // ラウンドpip
+    const pips = roundFx.querySelector('.round-pips');
+    pips.innerHTML = '';
+    for (let r = 1; r <= total; r++) {
+      const s = document.createElement('span');
+      s.className = 'pip' + (r <= roundNo ? ' on' : '');
+      pips.appendChild(s);
+    }
+    // 出玉カウントアップ
+    const payEl = roundFx.querySelector('.round-payout');
+    const steps = 8, inc = payout / steps;
+    for (let k = 0; k < steps; k++) {
+      roundTotalPayout += inc;
+      payEl.innerHTML = `${Math.round(roundTotalPayout)}<small>玉</small>`;
       if (A()) A().SE.payout();
       if (onBall) onBall();
-      await sleep(70);
+      await sleep(55);
     }
+    await sleep(160);
+    if (roundNo === total) { hide(roundFx); playConfetti(1600); }
   }
 
   window.PRODUCTION = { init, run, playRound, playUpgrade, playKakutei, playConfetti,

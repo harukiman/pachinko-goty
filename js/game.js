@@ -23,6 +23,7 @@
     auto: false,
     // 実機データカウンター用
     bigHits: 0,         // 大当り回数
+    kakuhenCount: 0,    // 確変回数
     maxRenchan: 0,      // 最高連チャン
     sinceHit: 0,        // 現在ハマり（前回大当りからの回転数）
     startBalls: START_BALLS,
@@ -45,8 +46,8 @@
       spins: S.spins, renchan: S.renchan, holds: S.holds.map(h => h.holdDef),
       state: S.kakuhen ? 'kakuhen' : S.jitan ? 'jitan' : 'normal',
       stRemaining: S.stRemaining,
-      bigHits: S.bigHits, maxRenchan: S.maxRenchan, sinceHit: S.sinceHit,
-      diff: Math.floor(S.balls - S.startBalls), history: S.history,
+      bigHits: S.bigHits, kakuhenCount: S.kakuhenCount, maxRenchan: S.maxRenchan, sinceHit: S.sinceHit,
+      diff: Math.floor(S.balls - S.startBalls), history: S.history, spinning: S.busy,
     };
   }
 
@@ -154,6 +155,7 @@
   async function doJackpot(willKakuhen) {
     S.renchan += 1;
     S.bigHits += 1;
+    if (willKakuhen) S.kakuhenCount += 1;
     S.sinceHit = 0;
     if (S.renchan > S.maxRenchan) S.maxRenchan = S.renchan;
     S.holds = []; // 大当りで保留クリア（止め打ち）
@@ -167,7 +169,7 @@
     for (let r = 1; r <= spec.rounds; r++) {
       const pay = spec.payoutPerRound;
       S.balls += pay;
-      await window.PRODUCTION.playRound(r, spec.rounds, pay, () => refresh());
+      await window.PRODUCTION.playRound(r, spec.rounds, pay, () => refresh(), { kakuhen: willKakuhen });
       refresh();
     }
     if (window.AUDIO) window.AUDIO.stopBgm(); // ラウンドBGM終了
@@ -192,7 +194,7 @@
     S.specKey = key; S.spec = C.SPECS[key];
     S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
     // 台移動 = データリセット
-    S.spins = 0; S.bigHits = 0; S.maxRenchan = 0; S.sinceHit = 0;
+    S.spins = 0; S.bigHits = 0; S.kakuhenCount = 0; S.maxRenchan = 0; S.sinceHit = 0;
     S.startBalls = S.balls; S.history = [];
     if (window.AUDIO) window.AUDIO.stopAllBgm();
     refresh();

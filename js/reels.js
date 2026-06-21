@@ -8,16 +8,22 @@
   let spinning = [false, false, false];
 
   function init() {
-    els = [...document.querySelectorAll('#reels .reel')].map((wrap, i) => ({
-      wrap, img: wrap.querySelector('img'), timer: null, idx: i,
-    }));
-    // 初期表示
-    els.forEach((e, i) => setSymbol(i, SYMS[i % SYMS.length]));
+    els = [...document.querySelectorAll('#reels .reel')].map((wrap, i) => {
+      let numEl = wrap.querySelector('.reel-num');
+      if (!numEl) { numEl = document.createElement('span'); numEl.className = 'reel-num'; wrap.appendChild(numEl); }
+      return { wrap, img: wrap.querySelector('img'), numEl, timer: null, idx: i };
+    });
+    // 初期表示（テンパイ風に散らす）
+    [0, 2, 4].forEach((k, i) => setSymbol(i, SYMS[k % SYMS.length]));
   }
 
   function setSymbol(i, sym) {
     els[i].img.src = window.ASSETS.url(sym.img);
     els[i].img.dataset.sym = sym.id;
+    if (els[i].numEl) {
+      els[i].numEl.textContent = sym.num;
+      els[i].numEl.className = 'reel-num ' + (sym.num % 2 ? 'odd' : 'even');
+    }
   }
 
   function startAll() {

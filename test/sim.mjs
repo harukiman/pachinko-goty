@@ -11,6 +11,10 @@ const require = createRequire(import.meta.url);
 const CONFIG = require('../js/config.js');
 const RNG = require('../js/rng.js');
 
+// 再現性のため乱数をシード固定（フレーク防止）
+const rand = RNG.mulberry32(20260621);
+RNG.setRandom(rand);
+
 const N = 2_000_000;
 let failures = 0;
 function check(name, ok, detail) {
@@ -58,7 +62,7 @@ for (const c of cats) counters[c] = {};
 
 const M = 6_000_000; // 演出は当り基準で集計するため多めに
 for (let i = 0; i < M; i++) {
-  const hit = Math.random() < pHit;
+  const hit = rand() < pHit;
   const prod = RNG.pickProduction(hit, pHit);
   const map = { hold: prod.hold, su: prod.su, reach: prod.reach, pseudo: prod.pseudo };
   for (const c of cats) {

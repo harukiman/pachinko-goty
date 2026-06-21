@@ -19,21 +19,35 @@
 
     // データカウンター
     $('#dc-bighits').textContent = st.bigHits;
+    $('#dc-kakuhen').textContent = st.kakuhenCount;
     $('#dc-maxren').textContent = st.maxRenchan;
     $('#dc-spins').textContent = st.spins;
     $('#dc-since').textContent = st.sinceHit;
+    $('#dc-prob').textContent = st.bigHits > 0 ? '1/' + Math.round(st.spins / st.bigHits) : '1/---';
 
-    // 電サポ中(確変/時短)は右打ち＋FEVER枠
+    // 電サポ中(確変/時短)は右打ち＋FEVER枠＋RUSH背景
     const denkou = st.state === 'kakuhen' || st.state === 'jitan';
     $('#migiuchi').classList.toggle('hidden', !denkou);
     const cab = $('#cabinet'); if (cab) cab.classList.toggle('fever', st.state === 'kakuhen');
+    const scr = $('#screen'); if (scr) scr.classList.toggle('rush', denkou);
 
-    // 保留
+    // 変動中ランプ
+    const cur = $('#hold-current');
+    if (cur) { cur.classList.toggle('on', !!st.spinning); cur.style.color = '#3af0ff'; }
+
+    // 保留（先読み昇格は色変化でポップ）
     const slots = document.querySelectorAll('.hold-slot');
     slots.forEach((el, i) => {
       const h = st.holds[i];
-      if (h) { el.classList.add('on'); el.style.background = h.color; el.style.color = h.color; }
-      else { el.classList.remove('on'); el.style.background = ''; el.style.color = ''; }
+      const newColor = h ? h.color : '';
+      if (el._color !== newColor) {
+        if (h && el._color && el._color !== '#e8e8e8') {
+          el.classList.remove('promote'); void el.offsetWidth; el.classList.add('promote');
+        }
+        el._color = newColor;
+      }
+      if (h) { el.classList.add('on'); el.style.background = ''; el.style.color = h.color; }
+      else { el.classList.remove('on'); el.style.color = ''; }
     });
 
     drawSlump(st.history);
@@ -47,16 +61,31 @@
     slumpCtx = slumpCtx || cv.getContext('2d');
     const ctx = slumpCtx, W = cv.width, H = cv.height;
     ctx.clearRect(0, 0, W, H);
-    // 0ライン
     const data = history && history.length ? history : [{ n: 0, diff: 0 }];
-    let max = 100, min = -100;
+    let max = 1000, min = -1000;
     for (const p of data) { if (p.diff > max) max = p.diff; if (p.diff < min) min = p.diff; }
-    const pad = (max - min) * 0.1 || 50; max += pad; min -= pad;
+    const pad = (max - min) * 0.12 || 200; max += pad; min -= pad;
     const x = i => (data.length <= 1 ? 0 : (i / (data.length - 1)) * (W - 2)) + 1;
     const y = v => H - ((v - min) / (max - min)) * (H - 2) - 1;
-    // グリッド0ライン
-    ctx.strokeStyle = '#24344f'; ctx.lineWidth = 1;
+    // 1000玉ごとのグリッド
+    ctx.strokeStyle = '#16223a'; ctx.lineWidth = 1; ctx.beginPath();
+    const startG = Math.ceil(min / 1000) * 1000;
+    for (let g = startG; g <= max; g += 1000) { const gy = y(g); ctx.moveTo(0, gy); ctx.lineTo(W, gy); }
+    ctx.stroke();
+    // 0ライン強調
+    ctx.strokeStyle = '#3a5378'; ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.moveTo(0, y(0)); ctx.lineTo(W, y(0)); ctx.stroke();
+    // 大当りマーカー（差玉が急上昇した点に縦線）
+    ctx.strokeStyle = 'rgba(255,210,59,.35)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i].diff - data[i - 1].diff > 200) { const mx = x(i); ctx.moveTo(mx, 0); ctx.lineTo(mx, H); }
+    }
+    ctx.stroke();
+    // エリア塗り
+    ctx.beginPath();
+    data.forEach((p, i) => { const px = x(i), py = y(p.diff); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    ctx.lineTo(x(data.length - 1), y(min)); ctx.lineTo(x(0), y(min)); ctx.closePath();
+    ctx.fillStyle = 'rgba(25,230,160,.13)'; ctx.fill();
     // ライン
     ctx.strokeStyle = '#19e6a0'; ctx.lineWidth = 1.6; ctx.beginPath();
     data.forEach((p, i) => { const px = x(i), py = y(p.diff); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
@@ -64,7 +93,7 @@
     // 末端ドット
     const last = data[data.length - 1];
     ctx.fillStyle = last.diff >= 0 ? '#39d353' : '#ff6b6b';
-    ctx.beginPath(); ctx.arc(x(data.length - 1), y(last.diff), 2.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x(data.length - 1), y(last.diff), 2.6, 0, 7); ctx.fill();
   }
 
   function buildSpecSelect() {

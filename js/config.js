@@ -12,17 +12,18 @@
  *   で理論計算でき、test/sim.mjs のモンテカルロで検証できる。
  */
 
+// num: 実機デジパチの図柄数字。奇数=確変図柄、偶数=通常図柄（実機準拠）。
 const SYMBOLS = [
-  { id: 'peace',  img: 'reel_peace.jpg',  label: 'ピース',     rank: 1 },
-  { id: 'mosaic', img: 'reel_mosaic.jpg', label: 'モザイク',   rank: 2 },
-  { id: 'doya',   img: 'reel_doya.jpg',   label: 'ドヤ',       rank: 3 },
-  { id: 'hero',   img: 'reel_hero.jpg',   label: 'ヒーロー',   rank: 4 },
-  { id: 'black',  img: 'reel_black.jpg',  label: '黒塗り',     rank: 5 },
-  { id: 'legend', img: 'reel_legend.jpg', label: '50年後',     rank: 6 },
+  { id: 'peace',  img: 'reel_peace.jpg',  label: 'ピース',   rank: 1, num: 2 },
+  { id: 'mosaic', img: 'reel_mosaic.jpg', label: 'モザイク', rank: 2, num: 4 },
+  { id: 'hero',   img: 'reel_hero.jpg',   label: 'ヒーロー', rank: 4, num: 6 },
+  { id: 'doya',   img: 'reel_doya.jpg',   label: 'ドヤ',     rank: 3, num: 3 },
+  { id: 'legend', img: 'reel_legend.jpg', label: '50年後',   rank: 6, num: 5 },
+  { id: 'black',  img: 'reel_black.jpg',  label: '黒塗り',   rank: 5, num: 7 },
 ];
 
-// 確変図柄（奇数役物の代わり）。揃うと確変、それ以外は通常当り。
-const KAKUHEN_SYMBOLS = ['doya', 'black', 'legend'];
+// 確変図柄（奇数揃い）。揃うと確変、偶数揃いは通常当り。
+const KAKUHEN_SYMBOLS = ['doya', 'legend', 'black'];
 
 /*
  * スペック定義

@@ -7,3 +7,7 @@ node_modules/
 # test artifacts
 test/_*.png
 test/_*.html
+
+# dev tooling (keep repo dependency-free)
+package.json
+package-lock.json
