@@ -31,10 +31,13 @@
     delay = ctx.createDelay(1.0); delay.delayTime.value = 0.26;
     delayGain = ctx.createGain(); delayGain.gain.value = 0.28;
     leadBus.connect(delay); delay.connect(delayGain); delayGain.connect(delay); delayGain.connect(master);
+    // running から外れたら(suspended / iOSのinterrupted)自動で復帰を試みる
+    ctx.onstatechange = () => { if (ctx && ctx.state !== 'running') { try { const q = ctx.resume(); if (q && q.then) q.then(reviveBgm).catch(() => {}); } catch (_) {} } };
   }
   function resume() {
     ensure();
-    if (ctx.state === 'suspended') {
+    // ★ suspended だけでなく iOS の 'interrupted'(電話/他アプリ音/通知 等)も復帰対象にする
+    if (ctx.state !== 'running') {
       const p = ctx.resume();
       // resume完了後、本来鳴るべきBGM(activeKind/baseKind)が止まっていたら復旧
       if (p && p.then) p.then(reviveBgm).catch(() => {});
@@ -156,8 +159,8 @@
   }
   function scheduler() {
     if (!ctx) return;
-    // ★音消えバグ対策: 何らかの理由でctxがsuspendedになっていたら毎tick復帰を試みる
-    if (ctx.state === 'suspended') { try { ctx.resume(); } catch (_) {} }
+    // ★音消えバグ対策: ctxが running から外れていたら(suspended/interrupted)毎tick復帰を試みる
+    if (ctx.state !== 'running') { try { ctx.resume(); } catch (_) {} }
     if (!activeKind) { stopSched(); return; }    // 無音時はタイマーを止める（CPU/電池節約）
     // 再開時などにスケジュールが大きく遅れていたら詰め直す（音符の一斉発音=重なりを防止）
     if (nextStepTime < ctx.currentTime - 0.3) nextStepTime = ctx.currentTime + 0.03;
