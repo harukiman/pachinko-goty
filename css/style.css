@@ -534,3 +534,143 @@ select{font-family:inherit;font-weight:700;}
 /* 軍資金増加ポップ */
 @keyframes bkPop{0%{transform:scale(1);}40%{transform:scale(1.18);filter:brightness(1.5);}100%{transform:scale(1);}}
 #bk-money.bk-pop{animation:bkPop .4s ease-out;display:inline-block;}
+
+/* =========================================================
+   UI/UX 仕上げパス v2（後勝ち。ID/クラス名は不変・見栄えのみ）
+   - 視認性/階層/タップ性/オン-オフ明示/横はみ出しゼロを強化
+   ========================================================= */
+
+/* 横スクロール完全防止の最終ガード（全幅要素の枠を内側に） */
+*{min-width:0;}
+#bankroll,#data-counter,#cabinet{width:auto;margin-left:auto;margin-right:auto;}
+
+/* ---- 軍資金バー：3指標を“額面パネル”として強調 ---- */
+#bankroll{background:linear-gradient(165deg,#140a22,#0a0510 70%);
+  border:1px solid #33214d;border-radius:12px;padding:9px 10px;
+  box-shadow:0 4px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);}
+.bk-row{gap:7px;}
+.bk-item{position:relative;background:rgba(255,255,255,.03);border:1px solid #2a1840;
+  border-radius:9px;padding:5px 3px 6px;}
+.bk-item span{font-size:9px;letter-spacing:.5px;color:#9784b8;margin-bottom:1px;}
+.bk-item b{font-size:clamp(14px,4.7vw,19px);line-height:1.05;text-shadow:0 0 10px rgba(255,210,59,.25);}
+.bk-item:nth-child(2) b{color:#5cf0ff;text-shadow:0 0 10px rgba(58,240,255,.25);}
+#bk-profit{text-shadow:0 0 10px rgba(57,211,83,.3);}
+/* 進捗バー：くっきり＋光沢＋目盛り */
+.fg-label{font-size:10.5px;color:#d6c6f0;gap:5px;}
+.fg-label #fg-pct{color:#ffd23b;font-weight:900;text-shadow:0 0 8px rgba(255,210,59,.4);}
+.fg-bar{height:12px;background:#0d0718;border:1px solid #33214d;border-radius:7px;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.6);}
+#fg-fill{background:linear-gradient(90deg,#39d353,#ffd23b 60%,#ff6ec7);
+  box-shadow:0 0 12px rgba(255,210,59,.5);position:relative;}
+#fg-fill::after{content:'';position:absolute;inset:0;border-radius:7px;
+  background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 55%);}
+
+/* ---- データカウンター：実機表示機の質感を強める ---- */
+#data-counter{background:linear-gradient(180deg,#04060c,#02030700);
+  border:2px solid #1c2c48;box-shadow:inset 0 0 18px rgba(0,0,0,.85),0 4px 14px rgba(0,0,0,.4);}
+.dc-cell{background:linear-gradient(180deg,#0b1322,#070d18);border:1px solid #15233c;}
+.dc-cell b{text-shadow:0 0 10px rgba(25,230,160,.55),0 0 2px rgba(25,230,160,.9);}
+.dc-cell.hamari b{text-shadow:0 0 10px rgba(255,90,54,.55);}
+.dc-prob{border-top:1px solid #13203a;padding-top:4px;}
+
+/* ---- スランプグラフ：縁取りで一体感 ---- */
+#slump{box-shadow:inset 0 0 12px rgba(0,0,0,.7);}
+
+/* ---- ステータスバッジ：状態が一目で分かる ---- */
+.badge{padding:2px 11px;border-radius:11px;background:#2a2140;color:#cbb8ec;
+  border:1px solid #3a2c4a;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);}
+.badge.kakuhen{border-color:#ffd23b;}
+.badge.jitan{border-color:#7ab0ff;color:#eaf4ff;box-shadow:0 0 10px rgba(42,127,255,.5);}
+
+/* ---- 右打ち指示：より目立つ立体ラベル ---- */
+#migiuchi{padding:6px 15px;border-radius:9px;border:2px solid #fff6;
+  box-shadow:0 0 18px #ffb300,0 3px 8px rgba(0,0,0,.5);text-shadow:0 1px 0 rgba(255,255,255,.4);}
+
+/* ---- 共通ボタン：押下/無効状態を明確化（全インタラクティブ要素） ---- */
+button{font-family:inherit;}
+.big-btn,.toggle-btn,.shop-btn,.mg-btn,.uchi-btn,.mg-game-btn,.mg-opt{
+  -webkit-user-select:none;user-select:none;}
+.big-btn:focus-visible,.toggle-btn:focus-visible,.shop-btn:focus-visible,
+.uchi-btn:focus-visible,.mg-btn:focus-visible{outline:2px solid #3af0ff;outline-offset:2px;}
+.toggle-btn:disabled,.shop-btn:disabled,.mg-btn:disabled,.uchi-btn:disabled{
+  filter:grayscale(.55) brightness(.7);box-shadow:none;cursor:default;transform:none;}
+
+/* 発射ボタン：最重要アクションとして最大のタップ域＋脈動ヒント */
+#fire{min-height:60px;}
+#fire:not(:disabled):not(:active){animation:fireBreathe 2.4s ease-in-out infinite;}
+@keyframes fireBreathe{0%,100%{box-shadow:0 6px 0 #a85e00,0 10px 18px rgba(0,0,0,.45);}
+  50%{box-shadow:0 6px 0 #a85e00,0 10px 26px rgba(255,170,0,.45);}}
+#fire:disabled{animation:none;}
+
+/* トグルのON/OFFをより明確に：OFFは沈んで暗く、ONは光る */
+.toggle-btn{min-height:44px;color:#bcaad8;}
+.toggle-btn.active{position:relative;}
+.toggle-btn.active::before{content:'';position:absolute;left:7px;top:50%;width:7px;height:7px;
+  margin-top:-3.5px;border-radius:50%;background:#021;box-shadow:0 0 6px #fff;}
+
+/* 物語/実績/設定ボタンも最低タップ域を確保 */
+.uchi-btn,.shop-btn{min-height:46px;}
+
+/* ---- 打ち分け：左右が物理スイッチのように分かる ---- */
+#uchi{gap:8px;}
+.uchi-btn{color:#b6a3da;letter-spacing:1px;}
+.uchi-btn::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:#4a3a66;margin-right:6px;vertical-align:1px;transition:all .15s;}
+.uchi-btn.active::before{background:#021;box-shadow:0 0 8px #5cf0ff;}
+.uchi-btn.need::before{background:#ff8a00;box-shadow:0 0 8px #ffb300;}
+/* needは“押して”と分かるよう強調 */
+.uchi-btn.need{box-shadow:0 3px 0 #a85e00,0 0 16px rgba(255,180,0,.6);}
+
+/* ---- 保留：玉らしい光沢を強化 ---- */
+.hold-slot.on,.hold-current.on{box-shadow:0 0 14px currentColor,inset 0 0 6px rgba(255,255,255,.4);}
+.hold-label{color:#8a77b0;}
+
+/* ---- ランプバー：上品な発光に ---- */
+#lamp-bar span{box-shadow:0 0 6px currentColor,inset 0 -2px 4px rgba(0,0,0,.4);}
+
+/* ---- パネル/行：余白とラベルの読みやすさ ---- */
+#panel{padding:11px;border-color:#33214d;}
+#panel .row{gap:8px;margin-bottom:9px;}
+#panel .row:last-child{margin-bottom:0;}
+#panel label{color:#d6c6f0;}
+#panel select,#rate-select,#speed-select{min-height:40px;border-color:#3a2c4a;
+  background:linear-gradient(180deg,#16102a,#0e0820);}
+#volume{accent-color:#3af0ff;height:40px;}
+#mute{min-width:46px;}
+.info{color:#9d8abf;}
+.info b{color:#d6c6f0;}
+
+/* ---- モーダル：ヘッダーの締まり＆閉じるボタンのタップ域 ---- */
+.mg-close{min-width:40px;min-height:40px;border-radius:9px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.mg-close:active{background:rgba(255,255,255,.12);}
+.mg-header{background:linear-gradient(180deg,rgba(255,255,255,.04),transparent);}
+
+/* ---- トースト：少しリッチに ---- */
+.toast{box-shadow:0 6px 20px rgba(0,0,0,.55),0 0 18px rgba(255,210,59,.2);}
+
+/* ---- スクロールバー（モーダル内）控えめに ---- */
+.mg-body::-webkit-scrollbar,.mg-panel::-webkit-scrollbar{width:7px;}
+.mg-panel::-webkit-scrollbar-thumb{background:#3a2c4a;border-radius:4px;}
+
+/* ---- 動きを減らす設定の尊重（過剰演出のアニメを抑制） ---- */
+@media(prefers-reduced-motion:reduce){
+  #fire:not(:disabled):not(:active){animation:none;}
+  #lamp-bar span{animation:none;}
+}
+
+/* ---- 320px：はみ出し防止と詰めの最終調整 ---- */
+@media(max-width:360px){
+  .bk-item{padding:4px 2px 5px;}
+  .bk-item span{font-size:8px;}
+  #uchi{gap:6px;}
+  .uchi-btn{letter-spacing:0;padding:11px 4px;}
+  #controls{gap:6px;}
+  #shop,#shop2{gap:5px;}
+  .toggle-btn{font-size:12px;padding:11px 6px;}
+  #panel{padding:9px;}
+}
+@media(max-width:330px){
+  .uchi-btn::before{display:none;}
+  .badge{padding:2px 8px;}
+}

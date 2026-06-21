@@ -32,7 +32,21 @@
     delayGain = ctx.createGain(); delayGain.gain.value = 0.28;
     leadBus.connect(delay); delay.connect(delayGain); delayGain.connect(delay); delayGain.connect(master);
   }
-  function resume() { ensure(); if (ctx.state === 'suspended') ctx.resume(); }
+  function resume() {
+    ensure();
+    if (ctx.state === 'suspended') {
+      const p = ctx.resume();
+      // resume完了後、本来鳴るべきBGM(activeKind/baseKind)が止まっていたら復旧
+      if (p && p.then) p.then(reviveBgm).catch(() => {});
+      else reviveBgm();
+    } else { reviveBgm(); }
+  }
+  // 中断・タブ切替・画面ロックから復帰した際にBGMスケジューラを取り戻す
+  function reviveBgm() {
+    if (!ctx) return;
+    if (!activeKind && baseKind) { activeKind = baseKind; step = 0; }  // baseが消えていたら復元
+    if (activeKind && !schedTimer) startSched();
+  }
   function setVolume(v) { volume = v; if (master) master.gain.setTargetAtTime(muted ? 0 : v, ctx.currentTime, 0.02); }
   function setMuted(m) { muted = m; if (master) master.gain.setTargetAtTime(m ? 0 : volume, ctx.currentTime, 0.02); }
   // 大きなSEの瞬間にBGMを一時的に下げる（迫力UP）
@@ -103,6 +117,10 @@
       bass: [52,52,64,52, 53,53,65,53, 57,57,69,57, 52,59,64,R], chord: { 0: [64,67,71], 8: [65,69,72] }, drum: 'drive' },
     jitan: { bpm: 150, loop: 16, lead: [67,71,74,71, 67,71,74,79, 72,76,79,76, 72,76,79,R],
       bass: [43,43,55,43, 48,48,55,48, 45,45,57,45, 47,47,55,R], chord: { 0: [55,59,62], 8: [60,64,67] }, drum: 'rock' },
+    // 確変中：高揚感のあるアッパー（Dメジャー寄り）。これまでnormalにフォールバックしていた専用曲
+    kakuhen: { bpm: 162, loop: 32, lead: [74,78,81,86, 85,81,78,81, 83,86,90,86, 85,83,81,78, 74,78,81,86, 88,86,85,83, 81,83,85,86, 90,88,86,81],
+      bass: [50,50,57,50, 55,55,57,55, 59,59,54,59, 57,57,52,57, 50,50,57,50, 55,55,57,55, 52,52,57,52, 50,57,62,R],
+      chord: { 0: [62,66,69], 8: [67,71,74], 16: [59,62,66], 24: [64,67,71] }, drum: 'drive' },
   };
   // ====== スケジューラ（ルックアヘッド） ======
   let activeKind = null, baseKind = null, step = 0, nextStepTime = 0, schedTimer = null;
@@ -138,6 +156,8 @@
   }
   function scheduler() {
     if (!ctx) return;
+    // ★音消えバグ対策: 何らかの理由でctxがsuspendedになっていたら毎tick復帰を試みる
+    if (ctx.state === 'suspended') { try { ctx.resume(); } catch (_) {} }
     if (!activeKind) { stopSched(); return; }    // 無音時はタイマーを止める（CPU/電池節約）
     // 再開時などにスケジュールが大きく遅れていたら詰め直す（音符の一斉発音=重なりを防止）
     if (nextStepTime < ctx.currentTime - 0.3) nextStepTime = ctx.currentTime + 0.03;
@@ -151,8 +171,9 @@
   function stopSched() { if (schedTimer) { clearInterval(schedTimer); schedTimer = null; } }
 
   function startBgm(kind) { ensure(); if (activeKind !== kind) step = 0; activeKind = kind; startSched(); }
-  function stopBgm() { if (activeKind !== baseKind) step = 0; activeKind = baseKind; if (activeKind) startSched(); }
-  function setBaseBgm(kind) { ensure(); baseKind = kind || null; if (!activeKind) { activeKind = baseKind; step = 0; } if (activeKind) startSched(); }
+  // 一時BGM(round/super等)を終了→常時BGM(baseKind)へ安全にフォールバック
+  function stopBgm() { if (activeKind !== baseKind) step = 0; activeKind = baseKind || null; if (activeKind) startSched(); else stopSched(); }
+  function setBaseBgm(kind) { ensure(); baseKind = kind || null; if (!activeKind) { activeKind = baseKind; step = 0; } if (activeKind) startSched(); else stopSched(); }
   function stopAllBgm() { baseKind = null; activeKind = null; stopSched(); }
 
   // ====== SE（脳汁系） ======
@@ -170,27 +191,74 @@
     holdUp() { ensure(); const t = T(); [700, 1050, 1570].forEach((f, k) => voice(f, t + k * 0.05, 0.12, { type: 'sine', gain: 0.18 })); },
     lose() { ensure(); voice(200, T(), 0.3, { type: 'sawtooth', gain: 0.16, slideTo: 110 }); },
     revive() { ensure(); const t = T(); voice(400, t, 0.45, { type: 'square', gain: 0.28, slideTo: 1800, dest: leadBus }); noise(t + 0.12, 0.3, { gain: 0.2, type: 'highpass', freq: 1500 }); },
-    // 大当りファンファーレ（メロディ）
+    // 大当りファンファーレ（メロディ）— 厚いブラス風＋下支えコード＋締めのシンバル
     fanfare() {
       ensure(); duck(); haptic([0, 50, 40, 90]); const t = T(), b = 0.13;
       const mel = [72, 76, 79, 84, 83, 84]; // C E G C ...
-      mel.forEach((n, k) => voice(mid(n), t + k * b, b * 1.4, { types: ['square', 'sawtooth'], detune: 6, gain: 0.26, dest: leadBus }));
+      mel.forEach((n, k) => {
+        voice(mid(n), t + k * b, b * 1.4, { types: ['square', 'sawtooth'], detune: 6, gain: 0.26, dest: leadBus });
+        voice(mid(n - 12), t + k * b, b * 1.2, { type: 'triangle', gain: 0.1 }); // オクターブ下で厚み
+      });
       [60, 64, 67].forEach(n => voice(mid(n), t + 0.5, 0.7, { type: 'triangle', gain: 0.14 }));
-      [72, 76, 79].forEach(n => voice(mid(n), t + 0.78, 0.8, { types: ['square', 'sawtooth'], detune: 8, gain: 0.2, dest: leadBus }));
-      kick(t, 0.6); snare(t + 0.26, 0.3); kick(t + 0.52, 0.6); noise(t + 0.5, 0.5, { gain: 0.16, type: 'highpass', freq: 3000 });
+      [72, 76, 79, 84].forEach(n => voice(mid(n), t + 0.78, 0.8, { types: ['square', 'sawtooth'], detune: 8, gain: 0.18, dest: leadBus }));
+      kick(t, 0.6); snare(t + 0.26, 0.3); kick(t + 0.52, 0.6); snare(t + 0.78, 0.32);
+      noise(t + 0.5, 0.5, { gain: 0.16, type: 'highpass', freq: 3000 });
+      noise(t + 0.78, 0.6, { gain: 0.18, type: 'highpass', freq: 6000 }); // クラッシュシンバル
+    },
+    // 短い勝利ジングル（小役/連チャン告知などサッと添えたい時用。新規キー）
+    win() {
+      ensure(); const t = T(); const arp = [72, 76, 79, 84];
+      arp.forEach((n, k) => voice(mid(n), t + k * 0.05, 0.18, { types: ['triangle', 'square'], detune: 4, gain: 0.18, dest: leadBus }));
+      [60, 64, 67].forEach(n => voice(mid(n), t + 0.2, 0.3, { type: 'triangle', gain: 0.1 }));
+      noise(t + 0.2, 0.18, { gain: 0.1, type: 'highpass', freq: 5000 });
+    },
+    // BGM突入前の上昇リザー（ライザー）。round/RUSH突入演出に軽く添えられる新規キー
+    riser() {
+      ensure(); const t = T();
+      voice(220, t, 0.6, { type: 'sawtooth', gain: 0.12, slideTo: 1400, filter: 1200, filterTo: 5000, r: 0.1, dest: leadBus });
+      noise(t, 0.6, { gain: 0.14, type: 'bandpass', freq: 1500, Q: 2 });
     },
     payout(f) { ensure(); voice(f || (1500 + Math.random() * 500), T(), 0.03, { type: 'square', gain: 0.1 }); },
     // 確変確定ベル（きらびやか上昇）
     kakuhen() { ensure(); duck(); haptic([0, 60, 40, 100]); const t = T(); [76, 81, 84, 88, 91].forEach((n, k) => voice(mid(n), t + k * 0.07, 0.5, { types: ['triangle', 'sine'], gain: 0.2, dest: leadBus })); },
     button() { ensure(); const t = T(); voice(880, t, 0.1, { type: 'square', gain: 0.2 }); voice(1320, t + 0.07, 0.2, { type: 'square', gain: 0.18, slideTo: 1760 }); },
     push() { ensure(); duck(); haptic(60); const t = T(); noise(t, 0.3, { gain: 0.45, type: 'lowpass', freq: 2600 }); kick(t, 0.7); voice(1500, t, 0.06, { type: 'square', gain: 0.2 }); },
-    kakutei() { ensure(); duck(); haptic([0, 40, 30, 80]); const t = T(), run = [72, 76, 79, 84, 88, 91]; run.forEach((n, k) => voice(mid(n), t + k * 0.06, 0.4, { types: ['square', 'triangle'], detune: 5, gain: 0.26, dest: leadBus })); noise(t + 0.36, 0.5, { gain: 0.16, type: 'highpass', freq: 4000 }); },
+    kakutei() {
+      ensure(); duck(); haptic([0, 40, 30, 80]); const t = T(), run = [72, 76, 79, 84, 88, 91];
+      run.forEach((n, k) => voice(mid(n), t + k * 0.06, 0.4, { types: ['square', 'triangle'], detune: 5, gain: 0.26, dest: leadBus }));
+      kick(t, 0.6); voice(mid(36), t, 0.5, { type: 'sine', gain: 0.2, slideTo: mid(24) }); // サブベースで重み
+      noise(t + 0.36, 0.5, { gain: 0.16, type: 'highpass', freq: 4000 });
+      [91, 96].forEach((n, k) => voice(mid(n), t + 0.42 + k * 0.05, 0.5, { types: ['triangle', 'sine'], gain: 0.16, dest: leadBus })); // きらめき余韻
+    },
     vflash() { ensure(); duck(); haptic(80); const t = T(); voice(1318, t, 0.5, { type: 'square', gain: 0.3, slideTo: 2637, dest: leadBus }); noise(t, 0.25, { gain: 0.28, type: 'highpass', freq: 2500 }); },
     tick() { ensure(); voice(900, T(), 0.025, { type: 'square', gain: 0.12, r: 0.02 }); },
     telop() { ensure(); const t = T(); voice(1800, t, 0.18, { type: 'sawtooth', gain: 0.2, slideTo: 400 }); noise(t, 0.16, { gain: 0.16, type: 'bandpass', freq: 3000 }); },
     upgrade() { ensure(); const t = T(); [67, 72, 76, 79, 84].forEach((n, k) => voice(mid(n), t + k * 0.1, 0.3, { types: ['sawtooth'], detune: 6, gain: 0.22, dest: leadBus })); },
     swarm() { ensure(); const t = T(); noise(t, 0.9, { gain: 0.2, type: 'lowpass', freq: 1500 }); voice(70, t, 0.9, { type: 'sawtooth', gain: 0.16, slideTo: 160 }); },
   };
+
+  // ====== 自動復帰リスナー（audio.js内に完結） ======
+  // 画面ロック/タブ切替/アプリ切替でctxがsuspendedになり「音が消える」問題を、
+  // 復帰イベント(可視化/フォーカス/タッチ)で必ずresume()して取り戻す。二重登録ガード付き。
+  let _listenersBound = false;
+  function bindRecoveryListeners() {
+    if (_listenersBound) return;
+    _listenersBound = true;
+    const wake = () => { try { if (ctx) resume(); } catch (_) {} };
+    try {
+      if (typeof document !== 'undefined' && document.addEventListener) {
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+        // ユーザー操作系（モバイルのautoplay制限解除も兼ねる）
+        document.addEventListener('pointerdown', wake, { passive: true });
+        document.addEventListener('touchstart', wake, { passive: true });
+      }
+      if (typeof window !== 'undefined' && window.addEventListener) {
+        window.addEventListener('focus', wake);
+        window.addEventListener('pageshow', wake);   // bfcache復帰
+      }
+    } catch (_) {}
+  }
+  bindRecoveryListeners();
 
   window.AUDIO = { resume, setVolume, setMuted, SE, startBgm, stopBgm, setBaseBgm, stopAllBgm,
                    get isMuted() { return muted; } };

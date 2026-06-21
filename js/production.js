@@ -38,14 +38,21 @@
   async function playSU(step) {
     if (step < 2) return;
     show(su);
-    const labels = ['', '', 'チャンス！', '激アツ！？', '超激アツ!!', '虹 確定級!!!'];
+    const labelPool = [[], [],
+      ['チャンス！', 'ゾーン突入！', 'いくぞ…'],
+      ['激アツ！？', 'アツくなれ！', '昇格！？'],
+      ['超激アツ!!', '大チャンス!!', '当確接近!!'],
+      ['虹 確定級!!!', 'プレミアSTEP!!!', '激熱 確定!!!']];
+    const stTags = ['STEP', 'STEP', '段階', 'STEP'];   // 表記も時々変えて新鮮味
+    const tag = rand(stTags);
     for (let s = 2; s <= step; s++) {
-      su.querySelector('.su-text').textContent = 'STEP ' + s;
+      su.querySelector('.su-text').textContent = tag + ' ' + s;
       su.querySelector('.su-text').style.color = s >= 5 ? '#ff6ec7' : s >= 4 ? '#ffd23b' : '#fff';
       if (A()) A().SE.su(s);
       await sleep(360);
     }
-    su.querySelector('.su-text').textContent = labels[step] || '';
+    su.querySelector('.su-text').textContent = rand(labelPool[step] || ['']) || '';
+    if (step >= 4 && chance(0.5)) await holdFlash();   // 高STEPで保留変化が連動することも
     await sleep(420);
     hide(su);
   }
@@ -53,12 +60,18 @@
   // 擬似連
   async function playPseudo(count) {
     if (!count) return;
+    // 連ごとに色が昇格していく（緑→青→金）と、たまに別表記で重厚に
+    const cols = ['#39d353', '#39d353', '#3af0ff', '#ffd23b', '#ff6ec7'];
+    const tags = ['擬似連', '連続予告', 'CHANCE'];
+    const tag = rand(tags);
     for (let n = 2; n <= count; n++) {
       show(reach);
-      reach.querySelector('.reach-text').textContent = '擬似連 ' + n + '!';
-      reach.querySelector('.reach-text').style.color = '#39d353';
+      const rt = reach.querySelector('.reach-text');
+      rt.textContent = tag + ' ' + n + (n >= count ? ' !!' : ' !');
+      rt.style.color = cols[Math.min(n, cols.length - 1)];
       if (A()) A().SE.pseudo();
       flashBoom();
+      if (n >= 3 && chance(0.35)) await holdFlash();   // 連の途中で保留変化
       window.REELS.startAll();
       await sleep(520);
       hide(reach);
@@ -67,6 +80,57 @@
   }
 
   const rand = a => a[Math.floor(Math.random() * a.length)];
+  const chance = p => Math.random() < p;
+
+  // ゾーン煽りの語彙プール（同じリーチ帯でも毎回違う昇格パスを引く＝飽きにくい）
+  const ZONE_STEPS = {
+    super: [
+      [{ t: 'CHANCE', c: '#1380ff' }, { t: 'チャンス！', c: '#39d353' }],
+      [{ t: 'ゾーン突入', c: '#1380ff' }, { t: 'アツい！', c: '#39d353' }],
+      [{ t: 'CHANCE', c: '#1380ff' }, { t: '発展!?', c: '#3af0ff' }, { t: 'チャンス！', c: '#39d353' }],
+      [{ t: 'いくぞ…', c: '#8a7' }, { t: 'CHANCE', c: '#1380ff' }, { t: '激アツ手前！', c: '#39d353' }],
+    ],
+    cutinGold: [
+      [{ t: 'CHANCE', c: '#1380ff' }, { t: '激アツ', c: '#ff8a00' }, { t: '金 確定級!!', c: '#ffd23b' }],
+      [{ t: 'GOLD ZONE', c: '#ff8a00' }, { t: '金 来い!!', c: '#ffd23b' }, { t: '当確級!!', c: '#ffd23b' }],
+      [{ t: '激 熱', c: '#ff3b3b' }, { t: '金保留!?', c: '#ff8a00' }, { t: '金 確定級!!', c: '#ffd23b' }],
+    ],
+    cutin: [
+      [{ t: 'CHANCE', c: '#1380ff' }, { t: '激 熱', c: '#ff3b3b' }],
+      [{ t: 'アツい!!', c: '#ff8a00' }, { t: '激 熱', c: '#ff3b3b' }],
+      [{ t: 'CHANCE', c: '#1380ff' }, { t: '炎 ゾーン', c: '#ff8a00' }, { t: '激 熱', c: '#ff3b3b' }],
+    ],
+    allreel: [
+      [{ t: 'CHANCE', c: '#1380ff' }, { t: '激 熱', c: '#ff3b3b' }, { t: '当 確 !?', c: '#b3008f' }],
+      [{ t: '全 回 転', c: '#3af0ff' }, { t: '伝説級!?', c: '#ff3b3b' }, { t: '当 確 !?', c: '#b3008f' }],
+      [{ t: 'ゾーン突入', c: '#1380ff' }, { t: '超激アツ', c: '#ff3b3b' }, { t: '当 確 !?', c: '#b3008f' }],
+    ],
+  };
+
+  // セリフ系テロップの語彙プール（帯ごとに別キャラ・口上が出て重厚感）
+  const SERIFS = {
+    super: ['「ここからだ…！」', '「掴み取れ！」', '「行くぞッ！」', '「魅せてやる！」'],
+    cutin: ['「全力でいくッ！！」', '「燃え尽きろ！！」', '「これで決める！！」', '「逃がさん！！」'],
+    allreel: ['「運命の刻だ……」', '「奇跡を見せろ！！」', '「伝説の幕開けだ！！」'],
+  };
+
+  // 保留変化フラッシュ（既存 .hold-slot に .promote を一瞬付与＝アツい保留昇格の表現）
+  async function holdFlash() {
+    const slots = document.querySelectorAll('.hold-slot, .hold-current');
+    if (!slots.length) return;
+    slots.forEach(s => { s.classList.remove('promote'); void s.offsetWidth; s.classList.add('promote'); });
+    if (A()) A().SE.telop();
+    flashBoom();
+    await sleep(360);
+    slots.forEach(s => s.classList.remove('promote'));
+  }
+
+  // ステージ切替の一瞬の画面フラッシュ（背景チェンジの間）＝リーチ後の場面転換の重み
+  async function stageSwitch() {
+    flashBoom(); shake();
+    if (A()) A().SE.swarm();
+    await sleep(260);
+  }
 
   // チャンスアップのゾーン煽り（段階的に文字が昇格＝重厚な期待感の演出）
   async function zoneBuildUp(steps, baseColor) {
@@ -107,33 +171,40 @@
 
     const storyOn = window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY;
     if (kind === 'super') {
-      msg('スーパーリーチ発展！');
-      await zoneBuildUp([{ t: 'CHANCE', c: '#1380ff' }, { t: 'チャンス！', c: '#39d353' }], '#1380ff');
-      await playTelop(rand(['チャンス！', '激アツ突入！', 'ここから一発！']), '#1380ff');
+      msg(rand(['スーパーリーチ発展！', 'SPリーチ！', '発展……スーパー！']));
+      if (chance(0.35)) await playSwarm();                 // 時々群予告も前置き
+      await zoneBuildUp(rand(ZONE_STEPS.super), '#1380ff');
+      if (chance(0.4)) await holdFlash();                  // 保留変化
+      await playTelop(rand(['チャンス！', '激アツ突入！', 'ここから一発！', '魅せ場だ！']), '#1380ff');
+      if (chance(0.4)) { await stageSwitch(); await playTelop(rand(SERIFS.super), '#3af0ff'); }   // ステージ切替＋セリフ
       if (storyOn) await window.CINEMA.play(window.STORY.battle('super'), { bgm: 'super' });
       await cutInImage(reachDef.img, reachDef.label, 1100, '#3af0ff');
       await sleep(600);
     } else if (kind === 'cutin') {
       const gold = reachDef.id === 'cutin_gold';
-      msg(gold ? '金カットイン!!!' : '激熱カットイン!!');
+      msg(gold ? rand(['金カットイン!!!', 'ゴールドカットイン!!!', 'プレミア金!!!']) : rand(['激熱カットイン!!', '炎のカットイン!!', '激アツ参戦!!']));
       await playSwarm();                                   // 群予告
-      await zoneBuildUp(gold
-        ? [{ t: 'CHANCE', c: '#1380ff' }, { t: '激アツ', c: '#ff8a00' }, { t: '金 確定級!!', c: '#ffd23b' }]
-        : [{ t: 'CHANCE', c: '#1380ff' }, { t: '激 熱', c: '#ff3b3b' }], gold ? '#ffd23b' : '#ff3b3b');
-      await playTelop(gold ? rand(['激アツ確定級!!', '金保留 当確級!!']) : rand(['激熱!!', '超激アツ!!', 'これは…当たる!!']), gold ? '#d4a800' : '#c00');
+      await zoneBuildUp(rand(gold ? ZONE_STEPS.cutinGold : ZONE_STEPS.cutin), gold ? '#ffd23b' : '#ff3b3b');
+      if (chance(gold ? 0.7 : 0.4)) await holdFlash();     // 保留変化（金帯は高確率）
+      await playTelop(gold ? rand(['激アツ確定級!!', '金保留 当確級!!', '勝ち確級!!']) : rand(['激熱!!', '超激アツ!!', 'これは…当たる!!', '燃えろ!!']), gold ? '#d4a800' : '#c00');
+      if (chance(0.5)) await playTelop(rand(SERIFS.cutin), gold ? '#ffd23b' : '#ff3b3b');   // セリフ
       if (storyOn) await window.CINEMA.play(window.STORY.battle(reachDef.id), { bgm: 'super' });
+      if (chance(0.4)) await stageSwitch();                // ステージ切替
       shake();
       await cutInImage(reachDef.img, reachDef.label, 1300, gold ? '#ffd23b' : '#ff3b3b');
-      if (gold) { await playTelop('勝利を掴め!!', '#ffd23b'); shakeHard(); }   // プレミアム帯は二段カットイン級
+      // プレミアム帯／たまに通常帯でも二段カットイン級に発展
+      if (gold || chance(0.25)) { await playTelop(rand(['勝利を掴め!!', '決着の刻!!', '掴み取れ!!']), gold ? '#ffd23b' : '#ff3b3b'); shakeHard(); }
       await sleep(600);
     } else if (kind === 'allreel') {
-      msg('全回転リーチ……当確!?');
+      msg(rand(['全回転リーチ……当確!?', '全回転……伝説!?', 'ALL REEL……当確!?']));
       screen.classList.add('rainbow');
       await playSwarm();
-      await zoneBuildUp([{ t: 'CHANCE', c: '#1380ff' }, { t: '激 熱', c: '#ff3b3b' }, { t: '当 確 !?', c: '#b3008f' }], '#b3008f');
-      await playTelop('当 確 !?', '#b3008f');
+      await zoneBuildUp(rand(ZONE_STEPS.allreel), '#b3008f');
+      await holdFlash();                                   // 全回転は保留も全昇格
+      await playTelop(rand(['当 確 !?', '伝 説 !?', '奇 跡 !?']), '#b3008f');
+      if (chance(0.6)) await playTelop(rand(SERIFS.allreel), '#ff6ec7');   // セリフ
       if (storyOn) await window.CINEMA.play(window.STORY.legend(), { bgm: 'allreel' });
-      await cutInImage(reachDef.img, '伝説の全回転', 1800, '#ff6ec7');
+      await cutInImage(reachDef.img, rand(['伝説の全回転', '奇跡の全回転', '神話級 全回転']), 1800, '#ff6ec7');
       await sleep(800);
     }
     if (A()) A().stopBgm();
@@ -355,8 +426,14 @@
     if (roundNo === 1) { roundTotalPayout = 0; await playVConfirm(); }
     if (roundNo === 1 || roundNo === total) playConfetti(1400);
     show(roundFx);
-    roundFx.querySelector('.round-head').textContent =
-      `${opts.kakuhen ? '確変' : ''}BONUS  ${roundNo} / ${total}R`;
+    // プレミアム配当演出（確変 or 時々）＝色味だけ豪華に。出玉数は不変。
+    const head = roundFx.querySelector('.round-head');
+    const premiumRound = opts.kakuhen || chance(0.18);
+    head.style.color = premiumRound ? '#ffd23b' : '';
+    if (premiumRound && roundNo === 1) screen.classList.add('rainbow');
+    if (!premiumRound) screen.classList.remove('rainbow');
+    head.textContent =
+      `${opts.kakuhen ? '確変' : (premiumRound ? 'SUPER ' : '')}BONUS  ${roundNo} / ${total}R`;
     // ラウンドpip
     const pips = roundFx.querySelector('.round-pips');
     pips.innerHTML = '';
@@ -377,7 +454,7 @@
     }
     roundTotalPayout = startVal + payout;
     await sleep(160);
-    if (roundNo === total) { hide(roundFx); playConfetti(1600); }
+    if (roundNo === total) { hide(roundFx); head.style.color = ''; screen.classList.remove('rainbow'); playConfetti(1600); }
   }
 
   window.PRODUCTION = { init, run, playRound, playUpgrade, playKakutei, playConfetti,
