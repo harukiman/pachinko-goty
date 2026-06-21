@@ -9,7 +9,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:radial-gradient(circle at 50% 0%,#1a0b2e 0%,var(--bg) 70%);
   color:#fff;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
-  min-height:100%;overscroll-behavior:none;overflow-x:hidden;max-width:100%;}
+  min-height:100%;overscroll-behavior:none;overflow-x:hidden;max-width:100%;
+  touch-action:manipulation;}  /* ダブルタップ拡大を防止 */
 /* 全体を画面幅に収め、横はみ出しを防止 */
 #data-counter,#cabinet{width:100%;}
 img,canvas{max-width:100%;}

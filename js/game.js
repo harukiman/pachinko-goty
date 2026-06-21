@@ -10,7 +10,7 @@
   const START_BALLS = 0;
   const INITIAL_MONEY = 50000;        // 開始軍資金（円）
   const LEND_LOT = 500;               // 1回の玉貸玉数
-  const RATES = [1, 5, 30, 50, 100, 1000, 10000]; // 円/玉
+  const RATES = [1, 5, 30, 50, 100, 1000, 10000, 100000]; // 円/玉
   // FIRE マイルストーン（総資産・円）
   const MILESTONES = [
     { amt: 1e8,  key: 'oku1',  level: 1 },

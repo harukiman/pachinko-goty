@@ -96,9 +96,9 @@
       nameEl.style.display = s.name ? 'inline-block' : 'none';
       await type(s.text, '#fff');
     } else { box.style.display = 'none'; }
-    const dur = s.dur || 1400;
+    const dur = (s.dur || 1400) / effSpeed();   // 倍速時はシーン表示も短縮
     const t0 = Date.now();
-    while (!skipFlag && Date.now() - t0 < dur) await sleep(50);
+    while (!skipFlag && Date.now() - t0 < dur) await sleep(40);
   }
 
   async function play(scenes, opts = {}) {
