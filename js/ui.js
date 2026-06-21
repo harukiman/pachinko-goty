@@ -140,11 +140,24 @@
     });
   }
 
+  // オープニングを初回ジェスチャで一度だけ再生
+  let opSeen = false;
+  async function maybeOpening() {
+    if (opSeen) return false;
+    opSeen = true;
+    if (window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY) {
+      await window.CINEMA.play(window.STORY.opening(), { bgm: 'super', skippable: true });
+      return true;
+    }
+    return false;
+  }
+
   function bindControls() {
     const fire = $('#fire');
     // 押している間だけ発射
-    const start = e => {
+    const start = async e => {
       e.preventDefault(); window.AUDIO.resume();
+      if (await maybeOpening()) return;        // 初回はOP再生のみ
       if (e.pointerId != null && fire.setPointerCapture) {
         try { fire.setPointerCapture(e.pointerId); } catch (_) {}
       }
@@ -164,12 +177,27 @@
     fire.addEventListener('blur', () => window.GAME.fireStop());
 
     const auto = $('#auto');
-    auto.addEventListener('click', () => {
+    auto.addEventListener('click', async () => {
+      window.AUDIO.resume();
+      if (await maybeOpening()) return;
       const on = !auto.classList.contains('active');
       auto.classList.toggle('active', on);
       auto.textContent = on ? 'オート ON' : 'オート OFF';
-      window.AUDIO.resume();
       window.GAME.setAuto(on);
+    });
+
+    // ムービー ON/OFF
+    const story = $('#toggle-story');
+    story.addEventListener('click', () => {
+      const on = !window.SETTINGS.story;
+      window.SETTINGS.story = on;
+      story.classList.toggle('active', on);
+      story.textContent = on ? '🎬 ムービー ON' : '🎬 ムービー OFF';
+    });
+    // OP再生
+    $('#replay-op').addEventListener('click', async () => {
+      window.AUDIO.resume();
+      if (window.CINEMA && window.STORY) await window.CINEMA.play(window.STORY.opening(), { bgm: 'super', skippable: true });
     });
 
     $('#volume').addEventListener('input', e => window.AUDIO.setVolume(parseFloat(e.target.value)));

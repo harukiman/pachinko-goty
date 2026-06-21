@@ -57,6 +57,17 @@
       <div id="fx-round" class="fx"><div class="round-head"></div><div class="round-pips"></div><div class="round-payout"></div></div>
       <div id="fx-result" class="fx"><div class="result-text"></div></div>
       <div id="fx-confetti" class="fx"></div>
+
+      <!-- シネマ（ストーリー/ムービー） -->
+      <div id="cinema" class="fx">
+        <div class="cine-bg"></div>
+        <div class="cine-bars"></div>
+        <img class="cine-char" alt="">
+        <div class="cine-title"></div>
+        <div class="cine-box"><span class="cine-name"></span><span class="cine-text"></span></div>
+        <div class="cine-skip">タップでスキップ ▶▶</div>
+      </div>
+
       <div id="fx-message" class="msg"></div>
     </section>
 
@@ -91,6 +102,10 @@
         <button id="mute" class="toggle-btn">🔊</button>
       </div>
       <div class="row">
+        <button id="toggle-story" class="toggle-btn active">🎬 ムービー ON</button>
+        <button id="replay-op" class="toggle-btn">OP再生</button>
+      </div>
+      <div class="row">
         <button id="toggle-debug" class="toggle-btn">デバッグ ▼</button>
         <button id="reset" class="toggle-btn">玉追加 +500</button>
       </div>
@@ -109,6 +124,8 @@
   <script src="js/audio.js"></script>
   <script src="js/rng.js"></script>
   <script src="js/reels.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/cinema.js"></script>
   <script src="js/production.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ui.js"></script>

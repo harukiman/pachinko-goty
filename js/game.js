@@ -177,6 +177,10 @@
     if (willKakuhen) { S.kakuhen = true; S.jitan = false; }
     else { S.kakuhen = false; S.jitan = true; }
     S.stRemaining = spec.stCount;
+    // 覚醒RUSH/時短 突入ムービー
+    if (window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY) {
+      await window.CINEMA.play(window.STORY.awaken(willKakuhen), { skippable: true });
+    }
     if (window.AUDIO) window.AUDIO.setBaseBgm(S.kakuhen ? 'kakuhen' : null); // 確変中BGM
     refresh();
   }

@@ -2,8 +2,11 @@
  * main.js — 初期化エントリ
  * 画像プリロード → 各モジュール初期化 → ゲーム開始。
  */
+window.SETTINGS = { story: true };
+
 window.addEventListener('DOMContentLoaded', async () => {
   window.PRODUCTION.init();
+  if (window.CINEMA) window.CINEMA.init();
   window.UI.init();
 
   // 画像プリロード（失敗してもゲームは動く）

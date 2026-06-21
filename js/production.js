@@ -81,6 +81,7 @@
     // スーパー以上は BGM 起動
     if (A()) A().startBgm(kind === 'allreel' ? 'allreel' : 'super');
 
+    const storyOn = window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY;
     if (kind === 'super') {
       msg('スーパーリーチ発展！');
       await playTelop('チャンス！', '#1380ff');
@@ -91,6 +92,7 @@
       msg(gold ? '金カットイン!!!' : '激熱カットイン!!');
       await playSwarm();                                   // 群予告
       await playTelop(gold ? '激アツ確定級!!' : '激熱!!', gold ? '#d4a800' : '#c00');
+      if (storyOn) await window.CINEMA.play(window.STORY.battle(reachDef.id), { bgm: 'super' });
       shake();
       await cutInImage(reachDef.img, reachDef.label, 1300, gold ? '#ffd23b' : '#ff3b3b');
       await sleep(600);
@@ -99,6 +101,7 @@
       screen.classList.add('rainbow');
       await playSwarm();
       await playTelop('当 確 !?', '#b3008f');
+      if (storyOn) await window.CINEMA.play(window.STORY.legend(), { bgm: 'allreel' });
       await cutInImage(reachDef.img, '伝説の全回転', 1800, '#ff6ec7');
       await sleep(800);
     }

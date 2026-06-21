@@ -119,6 +119,16 @@ async function main() {
   // DOMContentLoaded 発火
   try { await sandbox._domready(); } catch (e) { onErr('domready', e); }
 
+  // シネマ単体スモーク（短尺）→ 以降の強制スピンでは演出長を抑えるため story=false
+  try {
+    if (sandbox.window.CINEMA && sandbox.window.STORY) {
+      await sandbox.window.CINEMA.play([{ title: 'T', text: 'テスト', dur: 40 }], { skippable: true });
+      await sandbox.window.CINEMA.play(sandbox.window.STORY.battle('cutin_red').map(s => ({ ...s, dur: 30 })), {});
+      console.log('  [ok] cinema');
+    }
+  } catch (e) { onErr('cinema', e); console.log('  [ERR] cinema'); }
+  if (sandbox.window.SETTINGS) sandbox.window.SETTINGS.story = false;
+
   // 各種強制スピンを順に流す（例外検出が目的）
   const scenarios = [
     { name: 'miss-normal', o: { reachId: 'normal', hit: false } },

@@ -11,3 +11,4 @@ test/_*.html
 # dev tooling (keep repo dependency-free)
 package.json
 package-lock.json
+test/_*.mjs
