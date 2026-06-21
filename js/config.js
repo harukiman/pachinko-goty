@@ -37,7 +37,7 @@ const KAKUHEN_SYMBOLS = ['doya', 'black', 'legend'];
 const SPECS = {
   amadeji: {
     name: '甘デジ', normalOdds: 99, kakuhenOdds: 99 / 3.3,
-    kakuhenRate: 0.65, stCount: 100, rounds: 4, payoutPerRound: 75,
+    kakuhenRate: 0.55, stCount: 80, rounds: 4, payoutPerRound: 75,
     reachRate: 0.18,
   },
   light: {
