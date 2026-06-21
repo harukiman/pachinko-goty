@@ -63,6 +63,8 @@
     for (const it of items) HW += (it.hitWeight || 0);
 
     if (hit) {
+      // hitWeight 総和0（テーブル誤編集）の保険: filler/先頭を返す
+      if (HW <= 0) return items.find(it => it.filler) || items[0];
       // hitWeight=0 の段階（reach none 等）は当りでは選ばれない
       const probs = items.map(it => (it.hitWeight || 0) / HW);
       return pickByProb(items, probs);

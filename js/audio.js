@@ -33,7 +33,7 @@
     osc.frequency.setValueAtTime(freq, t0);
     if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(1, slideTo), t0 + dur);
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(gain, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + release);
     osc.connect(g).connect(dest || master);
     osc.start(t0);

@@ -107,30 +107,31 @@
   }
 
   // ---- 消化 ----
-  async function maybeConsume() {
+  // 単一駆動ループ。busy で再入を防ぎ、途中例外でも finally で必ず解放する。
+  function maybeConsume() { consumeLoop(); }
+  async function consumeLoop() {
     if (S.busy || S.holds.length === 0) return;
     S.busy = true;
-    const roll = S.holds.shift();
-    S.spins += 1;
-    if (S.kakuhen || S.jitan) {
-      S.stRemaining = Math.max(0, S.stRemaining - 1);
+    try {
+      while (S.holds.length > 0) {
+        const roll = S.holds.shift();
+        S.spins += 1;
+        if (S.kakuhen || S.jitan) S.stRemaining = Math.max(0, S.stRemaining - 1);
+        refresh();
+
+        const win = await window.PRODUCTION.run(roll.prod, roll.finalSyms, roll.willKakuhen);
+        if (win) await doJackpot(roll.willKakuhen);
+        else if ((S.kakuhen || S.jitan) && S.stRemaining <= 0) endST();
+      }
+    } catch (e) {
+      console.error('consume error:', e);
+      if (window.PRODUCTION) window.PRODUCTION.hideAll();
+    } finally {
+      S.busy = false;
+      refresh();
+      // オート中で保留が尽きたら発射を継続して次の入賞を待つ
+      if (S.auto && S.balls > 0 && S.holds.length === 0) fireStart();
     }
-    refresh();
-
-    const win = await window.PRODUCTION.run(roll.prod, roll.finalSyms, roll.willKakuhen);
-
-    if (win) {
-      await doJackpot(roll.willKakuhen);
-    } else {
-      // ST 終了判定
-      if ((S.kakuhen || S.jitan) && S.stRemaining <= 0) endST();
-    }
-    S.busy = false;
-    refresh();
-
-    // 続けて保留があれば消化、なければ発射継続で次の入賞を待つ
-    if (S.holds.length > 0) maybeConsume();
-    else if (S.auto && S.balls > 0) fireStart();
   }
 
   async function doJackpot(willKakuhen) {
@@ -170,6 +171,11 @@
     if (S.busy) return;
     if (window.AUDIO) window.AUDIO.resume();
     S.busy = true;
+    try { await forcePlayInner(overrides); }
+    catch (e) { console.error('forcePlay error:', e); if (window.PRODUCTION) window.PRODUCTION.hideAll(); }
+    finally { S.busy = false; refresh(); }
+  }
+  async function forcePlayInner(overrides) {
     const hit = overrides.hit ?? false;
     const pHit = currentPHit();
     const prod = window.RNG.pickProduction(hit, pHit);
@@ -189,8 +195,6 @@
     }
     await window.PRODUCTION.run(prod, finalSyms, willKakuhen);
     if (hit) await doJackpot(willKakuhen);
-    S.busy = false;
-    refresh();
   }
 
   // ---- 玉レーン描画 ----

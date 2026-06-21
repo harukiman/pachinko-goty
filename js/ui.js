@@ -70,12 +70,25 @@
   function bindControls() {
     const fire = $('#fire');
     // 押している間だけ発射
-    const start = e => { e.preventDefault(); window.AUDIO.resume(); window.GAME.fireStart(); };
-    const stop = e => { e.preventDefault(); window.GAME.fireStop(); };
+    const start = e => {
+      e.preventDefault(); window.AUDIO.resume();
+      if (e.pointerId != null && fire.setPointerCapture) {
+        try { fire.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+      window.GAME.fireStart();
+    };
+    const stop = e => { if (e) e.preventDefault(); window.GAME.fireStop(); };
     fire.addEventListener('pointerdown', start);
     fire.addEventListener('pointerup', stop);
-    fire.addEventListener('pointerleave', stop);
     fire.addEventListener('pointercancel', stop);
+    // キーボード操作（アクセシビリティ）: Enter/Space 押下中だけ発射
+    fire.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); window.AUDIO.resume(); window.GAME.fireStart(); }
+    });
+    fire.addEventListener('keyup', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.GAME.fireStop(); }
+    });
+    fire.addEventListener('blur', () => window.GAME.fireStop());
 
     const auto = $('#auto');
     auto.addEventListener('click', () => {
@@ -89,6 +102,7 @@
     $('#volume').addEventListener('input', e => window.AUDIO.setVolume(parseFloat(e.target.value)));
     const mute = $('#mute');
     mute.addEventListener('click', () => {
+      window.AUDIO.resume();
       const m = !window.AUDIO.isMuted;
       window.AUDIO.setMuted(m);
       mute.textContent = m ? '🔇' : '🔊';

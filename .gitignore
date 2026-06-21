@@ -3,3 +3,7 @@ node_modules/
 *.log
 .vscode/
 .idea/
+
+# test artifacts
+test/_*.png
+test/_*.html
