@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#fff4c2"/><stop offset="40%" stop-color="#e3a417"/><stop offset="100%" stop-color="#5a3600"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <g stroke="#fff6cf" stroke-width="6" opacity=".25">
+    <line x1="400" y1="250" x2="40" y2="-40"/><line x1="400" y1="250" x2="240" y2="-60"/><line x1="400" y1="250" x2="560" y2="-60"/>
+    <line x1="400" y1="250" x2="760" y2="-40"/><line x1="400" y1="250" x2="-40" y2="240"/><line x1="400" y1="250" x2="840" y2="240"/>
+  </g>
+  <g fill="#7a4a00" opacity=".8">
+    <rect x="60" y="300" width="48" height="300"/><rect x="160" y="300" width="48" height="300"/>
+    <rect x="592" y="300" width="48" height="300"/><rect x="692" y="300" width="48" height="300"/>
+  </g>
+  <path d="M340 600 L340 360 Q400 320 460 360 L460 600 Z" fill="#8a5a00"/>
+  <path d="M356 360 L444 360 L444 600 L356 600 Z" fill="#b9831a"/>
+</svg>

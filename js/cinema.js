@@ -15,12 +15,11 @@
  */
 (function () {
   const $ = s => document.querySelector(s);
-  const effSpeed = () => {
-    const s = window.SPEED || 1;
-    if ((window.SETTINGS && window.SETTINGS.fastProduction) || s >= 5 || (window.GAME && window.GAME.isAuto)) return s;
-    return 1;
-  };
-  const sleep = ms => new Promise(r => setTimeout(r, ms / effSpeed()));
+  // ストーリー/オープニング等のムービーは「アニメーション作品」として、
+  // 倍速・演出倍速・オートの一切から完全に除外し、常に等倍(×1)で再生する。
+  // （早送りしたい人は画面タップのスキップを使う設計）
+  const effSpeed = () => 1;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
   const A = () => window.AUDIO;
 
   let root, bg, fxlayer, bars, charEl, titleEl, box, nameEl, textEl, skipEl, inited = false;

@@ -396,6 +396,7 @@ img,canvas{max-width:100%;}
 .mg-btn{padding:12px 18px;font-size:15px;font-weight:800;border:none;border-radius:10px;
   background:linear-gradient(180deg,#ffe27a,#ffb300);color:#1a0b2e;cursor:pointer;}
 .mg-btn.wide{width:100%;}
+.mg-btn.mg-armed{opacity:.45;filter:grayscale(.4);transition:opacity .2s ease;}
 .mg-btnrow{display:flex;gap:10px;}
 .mg-result{text-align:center;font-size:16px;color:#fff;line-height:1.7;}
 .mg-reward{font-size:30px;font-weight:900;color:#ffd23b;font-variant-numeric:tabular-nums;}

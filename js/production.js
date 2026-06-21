@@ -6,12 +6,9 @@
  */
 (function () {
   const $ = sel => document.querySelector(sel);
-  // 演出速度: 「演出も倍速」ON / 倍速×5以上 / オート中 は倍率適用、それ以外は×1で堪能。
-  const effSpeed = () => {
-    const s = window.SPEED || 1;
-    if ((window.SETTINGS && window.SETTINGS.fastProduction) || s >= 5 || (window.GAME && window.GAME.isAuto)) return s;
-    return 1;
-  };
+  // 演出速度: 「演出も倍速」トグルが ON の時だけ倍率を適用。OFF なら常に×1で堪能。
+  // （倍速×Nやオート中でも、トグルOFFなら演出は等倍。ユーザーが明示的にONした時のみ早送り）
+  const effSpeed = () => (window.SETTINGS && window.SETTINGS.fastProduction) ? (window.SPEED || 1) : 1;
   const sleep = ms => new Promise(r => setTimeout(r, ms / effSpeed()));
   const A = () => window.AUDIO;
 
@@ -69,7 +66,25 @@
     reach.querySelector('.reach-text').style.color = '';
   }
 
-  // リーチ本体（kind に応じた熱演出）
+  const rand = a => a[Math.floor(Math.random() * a.length)];
+
+  // チャンスアップのゾーン煽り（段階的に文字が昇格＝重厚な期待感の演出）
+  async function zoneBuildUp(steps, baseColor) {
+    show(reach);
+    const rt = reach.querySelector('.reach-text');
+    for (let i = 0; i < steps.length; i++) {
+      rt.textContent = steps[i].t;
+      rt.style.color = steps[i].c || baseColor;
+      flashBoom();
+      if (A()) A().SE.su(Math.min(5, i + 2));
+      shake();
+      await sleep(420);
+    }
+    rt.style.color = '';
+    hide(reach);
+  }
+
+  // リーチ本体（kind に応じた熱演出。多段ビルドアップで重厚に）
   async function playReach(reachDef, finalSyms) {
     if (A()) A().SE.tenpai();
     show(reach);
@@ -93,7 +108,8 @@
     const storyOn = window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY;
     if (kind === 'super') {
       msg('スーパーリーチ発展！');
-      await playTelop('チャンス！', '#1380ff');
+      await zoneBuildUp([{ t: 'CHANCE', c: '#1380ff' }, { t: 'チャンス！', c: '#39d353' }], '#1380ff');
+      await playTelop(rand(['チャンス！', '激アツ突入！', 'ここから一発！']), '#1380ff');
       if (storyOn) await window.CINEMA.play(window.STORY.battle('super'), { bgm: 'super' });
       await cutInImage(reachDef.img, reachDef.label, 1100, '#3af0ff');
       await sleep(600);
@@ -101,15 +117,20 @@
       const gold = reachDef.id === 'cutin_gold';
       msg(gold ? '金カットイン!!!' : '激熱カットイン!!');
       await playSwarm();                                   // 群予告
-      await playTelop(gold ? '激アツ確定級!!' : '激熱!!', gold ? '#d4a800' : '#c00');
+      await zoneBuildUp(gold
+        ? [{ t: 'CHANCE', c: '#1380ff' }, { t: '激アツ', c: '#ff8a00' }, { t: '金 確定級!!', c: '#ffd23b' }]
+        : [{ t: 'CHANCE', c: '#1380ff' }, { t: '激 熱', c: '#ff3b3b' }], gold ? '#ffd23b' : '#ff3b3b');
+      await playTelop(gold ? rand(['激アツ確定級!!', '金保留 当確級!!']) : rand(['激熱!!', '超激アツ!!', 'これは…当たる!!']), gold ? '#d4a800' : '#c00');
       if (storyOn) await window.CINEMA.play(window.STORY.battle(reachDef.id), { bgm: 'super' });
       shake();
       await cutInImage(reachDef.img, reachDef.label, 1300, gold ? '#ffd23b' : '#ff3b3b');
+      if (gold) { await playTelop('勝利を掴め!!', '#ffd23b'); shakeHard(); }   // プレミアム帯は二段カットイン級
       await sleep(600);
     } else if (kind === 'allreel') {
       msg('全回転リーチ……当確!?');
       screen.classList.add('rainbow');
       await playSwarm();
+      await zoneBuildUp([{ t: 'CHANCE', c: '#1380ff' }, { t: '激 熱', c: '#ff3b3b' }, { t: '当 確 !?', c: '#b3008f' }], '#b3008f');
       await playTelop('当 確 !?', '#b3008f');
       if (storyOn) await window.CINEMA.play(window.STORY.legend(), { bgm: 'allreel' });
       await cutInImage(reachDef.img, '伝説の全回転', 1800, '#ff6ec7');
@@ -278,8 +299,9 @@
     if (storyReady) {
       const hot = prod.hit || prod.su.step >= 3 || ['red', 'gold', 'rainbow'].includes(prod.hold.id)
         || (prod.reach && prod.reach.kind !== 'none' && prod.reach.kind !== 'normal');
-      const fast = (window.SPEED || 1) >= 5;
-      const chance = hot ? 0.9 : (fast ? 0 : 0.1);
+      // 演出も倍速ONで早送りグラインド中のみ、非アツの予告を間引く（物語を堪能したい等倍時は通常通り）
+      const grinding = (window.SETTINGS && window.SETTINGS.fastProduction) && (window.SPEED || 1) >= 5;
+      const chance = hot ? 0.9 : (grinding ? 0 : 0.1);
       if (Math.random() < chance) await window.CINEMA.play(window.STORY.yokoku(hot), {});
     }
 

@@ -14,6 +14,12 @@
   function close() { clearTimers(); modal.classList.add('hidden'); body.innerHTML = ''; }
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const after = (ms, fn) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  // 連打系ゲームの直後、同じ位置に出る「もう一度/閉じる」を誤タップしないよう、
+  // 結果ボタンを描画直後の一定時間だけ操作不可にする（連打の余韻対策）。
+  function guard(els, ms = 650) {
+    els.forEach(e => { e.style.pointerEvents = 'none'; e.classList.add('mg-armed'); });
+    after(ms, () => els.forEach(e => { e.style.pointerEvents = ''; e.classList.remove('mg-armed'); }));
+  }
 
   // 資金到達で上位バイト解放（上位ほど高単価）
   const BAIT = [
@@ -93,14 +99,17 @@
     clearTimers(); titleEl.textContent = job.t;
     body.innerHTML = '';
     body.appendChild(el('div', 'mg-info', '準備にいくら賭ける？（高いほど成功率UP）'));
-    body.appendChild(el('p', 'mg-warn', '失敗すると保釈金として所持金の25%(上限¥100万)を没収。'));
+    body.appendChild(el('p', 'mg-warn', '失敗すると保釈金として所持金の25%を没収（上限なし）。3連続失敗で示談金が必要に。'));
     const list = el('div', 'mg-list');
+    const wanted = window.GAME.snapshot().wanted;
     TIERS.forEach(tier => {
       const cost = tier.cost * (job.cmod || 1);                 // 上位ほど必要投資UP
       const eff = Math.max(0.04, Math.min(0.96, tier.rate * (job.rmod || 1)));  // 上位ほど手ぶら成功率DOWN
+      const shown = window.GAME.wantedRate(eff);                // 実行時と同じ「手配度反映後」の成功率を表示
       const afford = window.GAME.money >= cost;
       const label = cost > 0 ? `${tier.label.replace(/¥[\d,]+/, '¥' + cost.toLocaleString())}` : tier.label;
-      const b = el('button', 'mg-game-btn', `<b>${label}</b><small>必要 ¥${cost.toLocaleString()}／成功率 約${Math.round(eff * 100)}%</small>`);
+      const dropTag = wanted > 0 ? ` <span style="color:#ff6b6b">(手配度-${Math.round((eff - shown) * 100)}%)</span>` : '';
+      const b = el('button', 'mg-game-btn', `<b>${label}</b><small>必要 ¥${cost.toLocaleString()}／成功率 約${Math.round(shown * 100)}%${dropTag}</small>`);
       if (!afford) { b.disabled = true; b.style.opacity = .5; }
       b.addEventListener('click', () => { if (window.GAME.spendMoney(cost)) darkExecute(job, eff); });
       list.appendChild(b);
@@ -139,6 +148,7 @@
     const again = el('button', 'mg-btn', '闇バイト一覧'); again.addEventListener('click', darkMenu);
     const cl = el('button', 'mg-btn', '足を洗う(閉じる)'); cl.addEventListener('click', close);
     row.append(again, cl); body.appendChild(row);
+    guard([again, cl]);
   }
 
   function finish(reward, label, rank) {
@@ -152,6 +162,7 @@
     const again = el('button', 'mg-btn', 'もう一度'); again.addEventListener('click', menu);
     const cl = el('button', 'mg-btn', '閉じる'); cl.addEventListener('click', close);
     row.appendChild(again); row.appendChild(cl); body.appendChild(row);
+    guard([again, cl]);   // 連打の余韻で即誤タップしないよう一瞬ロック
   }
   const rankOf = (score, max) => { const r = score / max; return r >= 1 ? '店長賞 SSS' : r >= .8 ? '評価 S' : r >= .6 ? '評価 A' : r >= .35 ? '評価 B' : '評価 C'; };
 
