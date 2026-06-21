@@ -91,11 +91,14 @@
       cur._zleft = zleft; cur._zw = zw;
     }
     btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      btn.disabled = true;             // 二重押し防止（報酬重複バグ防止）
       clearInterval(iv);
       const ok = pos >= cur._zleft && pos <= cur._zleft + cur._zw;
       if (ok) { hits++; if (A()) A().SE.holdUp(); } else if (A()) A().SE.lose();
       info.textContent = ok ? 'ナイス！' : 'ミス…';
-      setTimeout(nextRound, 500);
+      const to = setTimeout(() => { btn.disabled = false; nextRound(); }, 500);
+      timers.push(to);               // モーダルを閉じても発火させない
     });
     nextRound();
   }

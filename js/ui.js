@@ -46,8 +46,9 @@
     const ul = $('#uchi-left'), ur = $('#uchi-right');
     ul.classList.toggle('active', st.uchikata === 'left');
     ur.classList.toggle('active', st.uchikata === 'right');
+    // 必要な打ち方と違うときだけ点滅（通常時の左は既定なので常時点滅させない）
     ur.classList.toggle('need', st.needRight && st.uchikata !== 'right');
-    ul.classList.toggle('need', !st.needRight && st.uchikata !== 'left');
+    ul.classList.toggle('need', !st.needRight && st.uchikata === 'right');
 
     // レート/玉貸
     const rs = $('#rate-select'); if (rs && +rs.value !== st.rate) rs.value = st.rate;
@@ -122,6 +123,17 @@
     $('#reliability').innerHTML = `<b>遊び方</b>: レート選択→「玉貸」で玉を借り、長押しで発射。電サポ中は「右打ち」！ 当りで軍資金を増やし1億円(FIRE)を目指せ。軍資金は自動保存。<br><b>リーチ信頼度</b>: ${R}`;
   }
 
+  // 音量・ミュートの保存/復元
+  const AKEY = 'crfl_audio';
+  function saveAudio() { try { localStorage.setItem(AKEY, JSON.stringify({ v: parseFloat($('#volume').value), m: window.AUDIO.isMuted })); } catch (_) {} }
+  function loadAudio() {
+    try {
+      const d = JSON.parse(localStorage.getItem(AKEY) || 'null'); if (!d) return;
+      if (typeof d.v === 'number' && isFinite(d.v)) { $('#volume').value = d.v; window.AUDIO.setVolume(d.v); }
+      if (d.m) { window.AUDIO.setMuted(true); $('#mute').textContent = '🔇'; }
+    } catch (_) {}
+  }
+
   let opSeen = false;
   async function maybeOpening() {
     if (opSeen) return false;
@@ -173,13 +185,17 @@
       if (!r.ok && r.reason === 'nomoney') window.PRODUCTION.msg('軍資金が足りません →「💼バイト」で稼ごう！');
     });
     $('#cashout').addEventListener('click', () => { window.AUDIO.resume(); window.GAME.cashOut(); });
-    $('#bait').addEventListener('click', () => { window.AUDIO.resume(); window.MINIGAMES.open(); });
+    $('#bait').addEventListener('click', () => {
+      window.AUDIO.resume();
+      if (window.GAME.isBusy || (window.CINEMA && window.CINEMA.isPlaying)) { window.PRODUCTION.msg('演出中はバイトに行けません'); return; }
+      window.MINIGAMES.open();
+    });
     $('#minigame .mg-close').addEventListener('click', () => window.MINIGAMES.close());
 
     // 音
-    $('#volume').addEventListener('input', e => window.AUDIO.setVolume(parseFloat(e.target.value)));
+    $('#volume').addEventListener('input', e => { window.AUDIO.setVolume(parseFloat(e.target.value)); saveAudio(); });
     const mute = $('#mute');
-    mute.addEventListener('click', () => { window.AUDIO.resume(); const m = !window.AUDIO.isMuted; window.AUDIO.setMuted(m); mute.textContent = m ? '🔇' : '🔊'; });
+    mute.addEventListener('click', () => { window.AUDIO.resume(); const m = !window.AUDIO.isMuted; window.AUDIO.setMuted(m); mute.textContent = m ? '🔇' : '🔊'; saveAudio(); });
 
     // ムービー
     const story = $('#toggle-story');
@@ -195,5 +211,5 @@
     });
   }
 
-  window.UI = { render, init() { buildSpecSelect(); buildRateSelect(); buildReliabilityInfo(); bindControls(); } };
+  window.UI = { render, init() { buildSpecSelect(); buildRateSelect(); buildReliabilityInfo(); bindControls(); loadAudio(); } };
 })();

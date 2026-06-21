@@ -63,13 +63,14 @@
     try {
       const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
       if (!d) return;
+      const num = v => typeof v === 'number' && isFinite(v) && v >= 0;
       if (C.SPECS[d.specKey]) { S.specKey = d.specKey; S.spec = C.SPECS[d.specKey]; }
-      if (typeof d.money === 'number') S.money = d.money;
+      if (num(d.money)) S.money = d.money;
       if (RATES.includes(d.rate)) S.rate = d.rate;
-      if (typeof d.balls === 'number') S.balls = d.balls;
-      if (typeof d.peakAssets === 'number') S.peakAssets = d.peakAssets;
-      if (d.milestonesHit) S.milestonesHit = d.milestonesHit;
-      ['bigHits', 'kakuhenCount', 'maxRenchan', 'spins'].forEach(k => { if (typeof d[k] === 'number') S[k] = d[k]; });
+      if (num(d.balls)) S.balls = d.balls;
+      if (num(d.peakAssets)) S.peakAssets = d.peakAssets;
+      if (d.milestonesHit && typeof d.milestonesHit === 'object') S.milestonesHit = d.milestonesHit;
+      ['bigHits', 'kakuhenCount', 'maxRenchan', 'spins'].forEach(k => { if (num(d[k])) S[k] = d[k]; });
       S.startBalls = S.balls;
     } catch (_) {}
   }
@@ -293,6 +294,7 @@
     S.balls = 0;
     if (window.AUDIO) window.AUDIO.SE.kakutei();
     updatePeak(); save(); refresh();
+    checkMilestones();   // 換金で1億到達→エンディング
   }
   function setRate(r) {
     if (S.busy || !RATES.includes(r)) return;
@@ -301,7 +303,7 @@
     S.startBalls = 0; S.history = [];
     save(); refresh();
   }
-  function addMoney(n) { S.money += Math.max(0, Math.floor(n)); updatePeak(); save(); refresh(); }
+  function addMoney(n) { S.money += Math.max(0, Math.floor(n)); updatePeak(); save(); refresh(); checkMilestones(); }
   function setSpec(key) {
     if (!C.SPECS[key] || S.busy) return;
     S.specKey = key; S.spec = C.SPECS[key];

@@ -86,23 +86,6 @@
       t('激突！', '勝負の行方は…！？', { bg: 'bg-thunder', fx: 'flash', shock: true, dur: 1100, color: '#ff8a00' }),
     ];
   }
-  function _unused_battle(reachId) {
-    const who = 'doya';
-    if (who === 'black') return [
-      t('— 闇 襲来 —', '', { bg: 'bg-thunder', dur: 1000, color: '#ff3b3b' }),
-      sc('black', 'よく来た…だが貴様の旅はここで終わる。', { bg: 'bg-fire', form: 'dark', fx: 'shake', kb: true }),
-      sc('peace', 'うわ…っ、こいつ、ケタ違いに強い…！', { bg: 'bg-speed', fx: 'speed', dur: 1300 }),
-      sc('black', '闇に飲まれろォ——！', { bg: 'bg-fire', form: 'dark', fx: 'burst', se: 'cutin', dur: 1300 }),
-      t('激 闘', '運命の一撃——！！', { bg: 'bg-thunder', fx: 'flash', shock: true, dur: 1200, color: '#ff3b3b' }),
-    ];
-    if (who === 'hero') return [
-      sc('peace', 'もうダメだ…！だれか——！', { bg: 'bg-space', fx: 'shake', dur: 1200 }),
-      t('その時！', '', { bg: 'bg-gold', fx: 'flash', shock: true, dur: 900, color: '#ffd23b' }),
-      sc('hero', '待たせたな！正義のイエローヒーロー、参上！', { bg: 'bg-gold', form: 'gold', fx: 'zoom', kb: true, se: 'kakutei' }),
-      t('黄金共闘', '勝利を、掴め！', { bg: 'bg-aurora', fx: 'burst', shock: true, dur: 1300, color: '#ffd23b' }),
-    ];
-    return legend();
-  }
 
   function legend() {
     return [
