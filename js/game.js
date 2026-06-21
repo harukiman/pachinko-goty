@@ -29,6 +29,16 @@
   const SETTING_KAKU_BONUS = [-0.04, 0.00, 0.02, 0.04, 0.06, 0.08];
   const SETTING_INTERVAL_MS = 10 * 60 * 1000;  // 現実時間10分ごとに設定変更
 
+  // ===== キャッシング（借入）設定 =====
+  // 通常キャッシング: リボ風。一定回転ごとに残高へ利息が乗る。全額返済(完済)で限度額UP。
+  // 闇金(ウシジマ風): 初期限度も伸び幅もずっと大きいが暴利。一定ターン後からランダムで
+  //   「取り立てイベント」が発生し、その時の利息分を払えなければ強制でバイトが発生する。
+  //   借りると指名手配度UP。完済で限度額が爆伸び。
+  //   ※借金は総資産(=純資産)から差し引かれる＝完済しないとFIREできない（ウシジマ的な圧）。
+  const CASH = { base: 50000,  growth: 50000,  rate: 0.06, interval: 40 };
+  const YAMI = { base: 500000, growth: 500000, rate: 0.20, minTurns: 14, maxTurns: 30, wantedBorrow: 6, wantedCollect: 4 };
+  const randCollect = () => YAMI.minTurns + Math.floor(Math.random() * (YAMI.maxTurns - YAMI.minTurns + 1));
+
   // 実績（早期実績は報酬で序盤の資金繰りを滑らかに）
   const ACHIEVEMENTS = [
     { id: 'first_hit', name: '初大当り', desc: '初めて大当りを引く', reward: 5000, cond: s => s.bigHits >= 1 },
@@ -83,6 +93,14 @@
     darkBlacklist: false,   // 闇バイトブラックリスト入り
     darkBailFee: 0,         // 解除に必要な示談金
     wanted: 0,              // 指名手配度0〜100（高いほど闇バイト成功率低下）
+    // キャッシング（借入）
+    cashDebt: 0,            // 通常キャッシング残債（元本+利息）
+    cashTurns: 0,           // リボ利息計上カウンタ
+    cashClears: 0,          // 通常の完済回数（限度額の伸び）
+    yamiDebt: 0,            // 闇金残債
+    yamiClears: 0,          // 闇金の完済回数（限度額が爆伸び）
+    yamiCollectIn: 0,       // 次の取り立てイベントまでの残り回転
+    pendingSpec: null,      // 演出中に選んだスペック（消化後すぐ反映）
     // 実機データカウンター用
     bigHits: 0,         // 大当り回数
     kakuhenCount: 0,    // 確変回数
@@ -92,7 +110,9 @@
     history: [],        // スランプグラフ用 {n, diff}
   };
 
-  function assets() { return S.money + S.balls * S.rate; }
+  // 総資産＝純資産（借金は差し引く）。完済しないとFIRE（資産目標）に届かない。
+  function assets() { return S.money + S.balls * S.rate - S.cashDebt - S.yamiDebt; }
+  function totalDebt() { return S.cashDebt + S.yamiDebt; }
 
   // ---- セーブ/ロード（localStorage）----
   const SAVE_KEY = 'crfl_save_v1';
@@ -103,6 +123,8 @@
         peakAssets: S.peakAssets, milestonesHit: S.milestonesHit, achievements: S.achievements, baitEarned: S.baitEarned,
         storyChapter: S.storyChapter, darkBlacklist: S.darkBlacklist, darkBailFee: S.darkBailFee, wanted: S.wanted,
         bigHits: S.bigHits, kakuhenCount: S.kakuhenCount, maxRenchan: S.maxRenchan, spins: S.spins,
+        cashDebt: S.cashDebt, cashTurns: S.cashTurns, cashClears: S.cashClears,
+        yamiDebt: S.yamiDebt, yamiClears: S.yamiClears, yamiCollectIn: S.yamiCollectIn,
       }));
     } catch (_) {}
   }
@@ -125,6 +147,7 @@
       if (d.setting >= 1 && d.setting <= 6) S.setting = d.setting;
       S.darkBlacklist = !!d.darkBlacklist; if (num(d.darkBailFee)) S.darkBailFee = d.darkBailFee;
       if (num(d.wanted)) S.wanted = Math.min(100, d.wanted);
+      ['cashDebt', 'cashTurns', 'cashClears', 'yamiDebt', 'yamiClears', 'yamiCollectIn'].forEach(k => { if (num(d[k])) S[k] = d[k]; });
       S.maxRate = Math.max(S.maxRate, S.rate);
       window.SPEED = S.speed;
       ['bigHits', 'kakuhenCount', 'maxRenchan', 'spins'].forEach(k => { if (num(d[k])) S[k] = d[k]; });
@@ -137,6 +160,7 @@
     S.money = INITIAL_MONEY; S.rate = 1; S.maxRate = 1; S.balls = 0; S.peakAssets = INITIAL_MONEY;
     S.milestonesHit = {}; S.achievements = {}; S.baitEarned = false; S.storyChapter = 0; S.speed = 1; window.SPEED = 1;
     S.darkFails = 0; S.darkBlacklist = false; S.darkBailFee = 0;
+    S.cashDebt = S.cashTurns = S.cashClears = S.yamiDebt = S.yamiClears = S.yamiCollectIn = 0;
     S.bigHits = S.kakuhenCount = S.maxRenchan = S.spins = 0;
     S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
     S.startBalls = 0; S.history = [];
@@ -175,6 +199,8 @@
       ceiling: S.spec.ceiling || 0, ceilingRemain: S.spec.ceiling ? Math.max(0, S.spec.ceiling - S.sinceHit) : 0,
       darkBlacklist: S.darkBlacklist, darkBailFee: S.darkBailFee, darkFails: S.darkFails,
       wanted: Math.round(S.wanted),
+      cashDebt: S.cashDebt, yamiDebt: S.yamiDebt, totalDebt: totalDebt(),
+      pendingSpec: S.pendingSpec,
     };
   }
 
@@ -318,6 +344,7 @@
         S.spins += 1;
         S.sinceHit += 1;
         coolWanted(0.3);   // パチンコを真面目に打つと手配度が少しずつ下がる
+        accrueDebt();      // キャッシング利息・闇金の取り立てイベント処理
         if (S.kakuhen || S.jitan) S.stRemaining = Math.max(0, S.stRemaining - 1);
         // 天井（救済）: 通常で規定回転ハマったら強制大当り
         if (!roll.hit && !S.kakuhen && !S.jitan && S.spec.ceiling && S.sinceHit >= S.spec.ceiling) {
@@ -337,6 +364,7 @@
       if (window.AUDIO) window.AUDIO.stopBgm();
     } finally {
       S.busy = false;
+      if (S.pendingSpec && !locked()) applySpec(S.pendingSpec);   // 演出中に選んだスペックを消化後すぐ反映
       refresh();
       // オート中で保留が尽きたら発射を継続して次の入賞を待つ
       if (S.auto && S.balls > 0 && S.holds.length === 0) fireStart();
@@ -496,15 +524,88 @@
   // 指名手配度に応じた成功率（100%で1%まで低下）
   function wantedRate(eff) { return Math.max(0.01, eff * (1 - S.wanted / 100)); }
   function coolWanted(n) { if (S.wanted > 0) { S.wanted = Math.max(0, S.wanted - n); } }
-  function setSpec(key) {
-    if (!C.SPECS[key] || locked()) return;
+  function applySpec(key) {
     S.specKey = key; S.spec = C.SPECS[key];
     S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
-    // 台移動 = データリセット（軍資金/レートは維持）
+    // 台移動 = データリセット（軍資金/レート/借金は維持）
     S.spins = 0; S.bigHits = 0; S.kakuhenCount = 0; S.maxRenchan = 0; S.sinceHit = 0;
-    S.startBalls = S.balls; S.history = [];
+    S.startBalls = S.balls; S.history = []; S.pendingSpec = null;
     if (window.AUDIO) window.AUDIO.setBaseBgm('normal');
     save(); refresh();
+  }
+  // スペック変更は「すぐ反映」。演出中(locked)は予約し、消化が終わり次第 applySpec で即適用。
+  function setSpec(key) {
+    if (!C.SPECS[key]) return;
+    if (locked()) { S.pendingSpec = key; refresh(); return; }
+    applySpec(key);
+  }
+
+  // ===== キャッシング（借入）ロジック =====
+  function cashLimit() { return CASH.base + S.cashClears * CASH.growth; }
+  function yamiLimit() { return YAMI.base + S.yamiClears * YAMI.growth; }
+  function borrowCash(amt) {
+    amt = Math.floor(amt); const avail = cashLimit() - S.cashDebt;
+    amt = Math.min(amt, avail); if (amt <= 0) return { ok: false };
+    S.money += amt; S.cashDebt += amt; save(); refresh(); return { ok: true, amt };
+  }
+  function repayCash(amt) {
+    amt = Math.min(Math.floor(amt), S.cashDebt, S.money); if (amt <= 0) return { ok: false };
+    S.money -= amt; S.cashDebt -= amt; let cleared = false;
+    if (S.cashDebt <= 0) { S.cashDebt = 0; S.cashTurns = 0; S.cashClears += 1; cleared = true; }  // 完済で限度UP
+    save(); refresh(); return { ok: true, amt, cleared };
+  }
+  function borrowYami(amt) {
+    amt = Math.floor(amt); const avail = yamiLimit() - S.yamiDebt;
+    amt = Math.min(amt, avail); if (amt <= 0) return { ok: false };
+    S.money += amt; S.yamiDebt += amt;
+    S.wanted = Math.min(100, S.wanted + YAMI.wantedBorrow);   // 闇金は手配度UP
+    if (!S.yamiCollectIn) S.yamiCollectIn = randCollect();    // 初回取り立てまでのカウント開始
+    save(); refresh(); return { ok: true, amt };
+  }
+  function repayYami(amt) {
+    amt = Math.min(Math.floor(amt), S.yamiDebt, S.money); if (amt <= 0) return { ok: false };
+    S.money -= amt; S.yamiDebt -= amt; let cleared = false;
+    if (S.yamiDebt <= 0) { S.yamiDebt = 0; S.yamiCollectIn = 0; S.yamiClears += 1; cleared = true; }  // 完済で限度が爆伸び
+    save(); refresh(); return { ok: true, amt, cleared };
+  }
+  // 1回転ごと：通常リボ利息＋闇金のランダム取り立てイベント
+  function accrueDebt() {
+    if (S.cashDebt > 0) {
+      S.cashTurns += 1;
+      if (S.cashTurns >= CASH.interval) {
+        S.cashTurns = 0;
+        const add = Math.ceil(S.cashDebt * CASH.rate); S.cashDebt += add;
+        if (window.PRODUCTION) window.PRODUCTION.msg(`💳 キャッシング利息 +¥${add.toLocaleString()}（残債 ¥${S.cashDebt.toLocaleString()}）`);
+        save();
+      }
+    }
+    if (S.yamiDebt > 0) {
+      if (S.yamiCollectIn <= 0) S.yamiCollectIn = randCollect();
+      S.yamiCollectIn -= 1;
+      if (S.yamiCollectIn <= 0) {                       // ★取り立てイベント発生
+        const due = Math.ceil(S.yamiDebt * YAMI.rate);  // 暴利の利息＝今回支払うべき額
+        S.yamiDebt += due;
+        S.wanted = Math.min(100, S.wanted + YAMI.wantedCollect);
+        S.yamiCollectIn = randCollect();                // 次回の取り立てまで（ランダム）
+        if (S.money >= due) {                            // 利息分を払える → 元本据え置き
+          S.money -= due; S.yamiDebt -= due; save();
+          if (window.PRODUCTION) window.PRODUCTION.msg(`🩸 闇金の取り立て！利息 ¥${due.toLocaleString()} を回収された（残債 ¥${S.yamiDebt.toLocaleString()}）`);
+        } else {                                         // 払えない → 利息は元本へ上乗せ＆強制バイト
+          save(); refresh();
+          if (window.MINIGAMES && window.MINIGAMES.forcedCollect) window.MINIGAMES.forcedCollect(due);
+          else if (window.PRODUCTION) window.PRODUCTION.msg(`🩸 闇金の取り立て！利息¥${due.toLocaleString()}が払えない…バイトで稼げ！`);
+        }
+      }
+    }
+  }
+  function cashInfo() {
+    return {
+      cashDebt: S.cashDebt, cashLimit: cashLimit(), cashAvail: Math.max(0, cashLimit() - S.cashDebt),
+      cashRate: CASH.rate, cashInterval: CASH.interval, cashClears: S.cashClears,
+      yamiDebt: S.yamiDebt, yamiLimit: yamiLimit(), yamiAvail: Math.max(0, yamiLimit() - S.yamiDebt),
+      yamiRate: YAMI.rate, yamiClears: S.yamiClears, yamiCollectIn: S.yamiCollectIn,
+      money: S.money, totalDebt: totalDebt(),
+    };
   }
 
   // ---- デバッグ強制再生 ----
@@ -581,6 +682,7 @@
   window.GAME = { init, fireStart, fireStop, setAuto, setSpec, addBalls, forcePlay,
                   lendBalls, cashOut, setRate, setSpeed, addMoney, resetSave, resetMachine, save, setUchikata,
                   getAchievements, spendMoney, payBail, darkWin, darkFail, darkClearBlacklist, darkAttempt, wantedRate,
+                  borrowCash, repayCash, borrowYami, repayYami, cashInfo,
                   get money() { return S.money; },
                   snapshot, get isBusy() { return S.busy; }, get isAuto() { return S.auto; } };
 })();

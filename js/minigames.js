@@ -37,9 +37,10 @@
     { t: '🏥 外科医オペ', d: '極小ゾーンで精密タイミング', req: 1000000000, pay: 600000, fn: p => gameSushi(3, p) },
     { t: '🚀 ロケット技師', d: '超高速の連続暗算', req: 3000000000, pay: 1200000, fn: p => gameRegi(3, p) },
   ];
-  function menu() {
+  function menu(banner) {
     clearTimers(); titleEl.textContent = '💼 バイトを選ぶ';
     body.innerHTML = '';
+    if (banner) body.appendChild(el('div', 'mg-result arrested', banner));
     body.appendChild(el('p', 'mg-intro', '稼ぐほど高給バイトが解放！　うまくやるほど高評価＝高報酬。'));
     const money = window.GAME ? window.GAME.money : 0;
     const list = el('div', 'mg-list');
@@ -51,6 +52,10 @@
       list.appendChild(b);
     });
     body.appendChild(list);
+    // キャッシング/闇金（借入）入口
+    const cash = el('button', 'mg-game-btn', '<b>💳 キャッシング / 闇金</b><small>軍資金を借りる（リボ／闇金）。全額返済で限度UP</small>');
+    cash.addEventListener('click', () => { if (A()) A().SE.button(); cashingHub(); });
+    body.appendChild(cash);
     // 闇バイト入口（ハイリスク）
     const dark = el('button', 'mg-game-btn dark', '<b>🕶 闇バイト…</b><small>超高額。但し失敗で保釈金。自己責任で…</small>');
     dark.addEventListener('click', () => { if (A()) A().SE.swarm(); darkMenu(); });
@@ -330,5 +335,101 @@
     const iv = setInterval(() => { time -= 0.1; if (time <= 0) { clearInterval(iv); return finish(taps * pay, `${taps}枚 ピカピカ！`, rankOf(taps, 60)); } info.textContent = `${time.toFixed(1)}秒　洗った皿 ${taps}`; }, 100); timers.push(iv);
   }
 
-  window.MINIGAMES = { init, open, close };
+  // ===== キャッシング / 闇金（借入・返済）=====
+  // 闇金の取り立て役シルエット（オリジナル。撫でつけ髪＋メガネの不敵な光＋暗赤タイで“ウシジマ系”を喚起）
+  const YAMI_SVG = `<svg viewBox="0 0 120 160" class="yami-fig" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="闇金の取り立て屋">
+    <defs>
+      <linearGradient id="ybg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0d0d"/><stop offset="1" stop-color="#08060a"/></linearGradient>
+      <linearGradient id="yrim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff3b3b" stop-opacity="0"/><stop offset="1" stop-color="#ff3b3b" stop-opacity=".5"/></linearGradient>
+    </defs>
+    <rect width="120" height="160" fill="url(#ybg)"/>
+    <path d="M14 160 Q16 104 40 95 L80 95 Q104 104 106 160 Z" fill="#0c0c12"/>
+    <path d="M14 160 Q16 104 40 95 L80 95 Q104 104 106 160 Z" fill="url(#yrim)"/>
+    <path d="M52 97 L60 134 L68 97 Z" fill="#17171f"/>
+    <path d="M58 99 L60 152 L62 99 Z" fill="#3a0e12"/>
+    <rect x="53" y="83" width="14" height="16" fill="#141119"/>
+    <ellipse cx="60" cy="62" rx="22" ry="26" fill="#101015"/>
+    <path d="M38 54 Q44 28 60 28 Q76 28 82 54 Q70 42 60 44 Q50 42 38 54 Z" fill="#050507"/>
+    <rect x="43" y="58" width="15" height="10" rx="2" fill="#000" stroke="#4a4a4a" stroke-width="1.2"/>
+    <rect x="62" y="58" width="15" height="10" rx="2" fill="#000" stroke="#4a4a4a" stroke-width="1.2"/>
+    <line x1="58" y1="63" x2="62" y2="63" stroke="#4a4a4a" stroke-width="1.2"/>
+    <line x1="45" y1="66" x2="56" y2="59" stroke="#fff" stroke-width="1.8" opacity=".85"/>
+    <line x1="64" y1="66" x2="75" y2="59" stroke="#fff" stroke-width="1.8" opacity=".85"/>
+    <path d="M52 79 Q60 83 68 79" stroke="#5a2a2a" stroke-width="1.6" fill="none"/>
+  </svg>`;
+
+  function openCashing() { init(); if (A()) A().resume(); modal.classList.remove('hidden'); cashingHub(); }
+
+  function cashCard(c) {
+    const card = el('div', 'cash-card');
+    card.appendChild(el('div', 'cash-head', '💳 通常キャッシング（リボ）'));
+    card.appendChild(el('div', 'cash-stat', `残債 <b>¥${c.cashDebt.toLocaleString()}</b>　限度 ¥${c.cashLimit.toLocaleString()}（空き ¥${c.cashAvail.toLocaleString()}）`));
+    card.appendChild(el('div', 'cash-note', `${c.cashInterval}回転ごとに残債+${Math.round(c.cashRate * 100)}%。全額返済で限度+¥50,000（完済${c.cashClears}回）`));
+    const bRow = el('div', 'mg-btnrow');
+    [['¥10,000', 10000], ['¥50,000', 50000], ['限度まで', c.cashAvail]].forEach(([label, amt]) => {
+      const b = el('button', 'mg-btn', `借 ${label}`);
+      if (c.cashAvail <= 0 || amt <= 0) { b.disabled = true; b.style.opacity = .5; }
+      b.addEventListener('click', () => { if (window.GAME.borrowCash(amt).ok) { if (A()) A().SE.start(); cashingHub(); } });
+      bRow.appendChild(b);
+    });
+    card.appendChild(bRow);
+    const rRow = el('div', 'mg-btnrow');
+    [['¥10,000', 10000], ['全額返済', c.cashDebt]].forEach(([label, amt]) => {
+      const b = el('button', 'mg-btn', `返 ${label}`);
+      if (c.cashDebt <= 0 || c.money <= 0) { b.disabled = true; b.style.opacity = .5; }
+      b.addEventListener('click', () => { const r = window.GAME.repayCash(amt); if (r.ok) { if (A()) A().SE.kakutei(); if (r.cleared && window.UI) window.UI.toast('キャッシング完済！限度UP', 0); cashingHub(); } });
+      rRow.appendChild(b);
+    });
+    card.appendChild(rRow);
+    return card;
+  }
+  function yamiCard(c) {
+    const card = el('div', 'cash-card yami');
+    card.innerHTML = `<div class="yami-figwrap">${YAMI_SVG}</div>`;
+    card.appendChild(el('div', 'cash-head', '🩸 闇金（ウシジマ系）'));
+    card.appendChild(el('p', 'mg-warn', '⚠ これはゲームの風刺演出。現実の闇金は重大犯罪。絶対に利用しないこと。'));
+    card.appendChild(el('div', 'cash-stat', `残債 <b style="color:#ff6b6b">¥${c.yamiDebt.toLocaleString()}</b>　限度 ¥${c.yamiLimit.toLocaleString()}（空き ¥${c.yamiAvail.toLocaleString()}）`));
+    card.appendChild(el('div', 'cash-note', `暴利：取り立てのたび残債+${Math.round(c.yamiRate * 100)}%（ランダム襲来）。利息が払えなければ強制バイト。借りると指名手配度UP。全額返済で限度+¥500,000（完済${c.yamiClears}回）`));
+    if (c.yamiDebt > 0) card.appendChild(el('div', 'cash-note hot', `🩸 次の取り立てまで 約${c.yamiCollectIn}回転…`));
+    const bRow = el('div', 'mg-btnrow');
+    [['¥100,000', 100000], ['¥500,000', 500000], ['限度まで', c.yamiAvail]].forEach(([label, amt]) => {
+      const b = el('button', 'mg-game-btn dark', `借 ${label}`);
+      if (c.yamiAvail <= 0 || amt <= 0) { b.disabled = true; b.style.opacity = .5; }
+      b.addEventListener('click', () => { if (window.GAME.borrowYami(amt).ok) { if (A()) A().SE.swarm(); cashingHub(); } });
+      bRow.appendChild(b);
+    });
+    card.appendChild(bRow);
+    const rRow = el('div', 'mg-btnrow');
+    [['¥50,000', 50000], ['全額返済', c.yamiDebt]].forEach(([label, amt]) => {
+      const b = el('button', 'mg-btn', `返 ${label}`);
+      if (c.yamiDebt <= 0 || c.money <= 0) { b.disabled = true; b.style.opacity = .5; }
+      b.addEventListener('click', () => { const r = window.GAME.repayYami(amt); if (r.ok) { if (A()) A().SE.kakutei(); if (r.cleared && window.UI) window.UI.toast('闇金 完済！限度が爆伸び', 0); cashingHub(); } });
+      rRow.appendChild(b);
+    });
+    card.appendChild(rRow);
+    return card;
+  }
+  function cashingHub(banner) {
+    clearTimers(); titleEl.textContent = '💳 借入・返済';
+    const c = window.GAME.cashInfo();
+    body.innerHTML = '';
+    if (banner) body.appendChild(el('div', 'mg-result arrested', banner));
+    body.appendChild(el('p', 'mg-intro', `軍資金 ¥${c.money.toLocaleString()}　／　借金総額 <b style="color:#ff6b6b">¥${c.totalDebt.toLocaleString()}</b>`));
+    body.appendChild(el('p', 'mg-warn', '⚠ 借金は総資産から差し引かれます＝完済しないとFIREできません。'));
+    body.appendChild(cashCard(c));
+    body.appendChild(yamiCard(c));
+    const nav = el('div', 'mg-btnrow');
+    const toBait = el('button', 'mg-btn', '💼 バイトで稼ぐ'); toBait.addEventListener('click', () => menu());
+    const cl = el('button', 'mg-btn', '閉じる'); cl.addEventListener('click', close);
+    nav.append(toBait, cl); body.appendChild(nav);
+  }
+  // 闇金の取り立てで利息が払えない時：強制でバイトを発生させる
+  function forcedCollect(due) {
+    if (!modal) init();
+    if (A()) { A().resume(); A().SE.cutin(); A().SE.lose(); }
+    modal.classList.remove('hidden');
+    menu(`🩸 <b>闇金の取り立て！</b>　利息 ¥${due.toLocaleString()} が払えず…<br>バイトで稼いで返済しろ！（💳から返済できる）`);
+  }
+
+  window.MINIGAMES = { init, open, close, openCashing, forcedCollect };
 })();

@@ -35,6 +35,17 @@
     me._val = st.money; me.textContent = newM;
     $('#bk-value').textContent = yen(st.ballValue);
     const p = $('#bk-profit'); p.textContent = (st.profit >= 0 ? '+' : '') + yen(st.profit); p.style.color = st.profit >= 0 ? '#39d353' : '#ff6b6b';
+    // 借金（あれば表示）
+    const debtEl = $('#bk-debt');
+    if (debtEl) {
+      if (st.totalDebt > 0) {
+        const parts = [];
+        if (st.cashDebt > 0) parts.push(`💳 ${yen(st.cashDebt)}`);
+        if (st.yamiDebt > 0) parts.push(`🩸 ${yen(st.yamiDebt)}`);
+        debtEl.innerHTML = `借金 ${parts.join('　')}　<b>計 ${yen(st.totalDebt)}</b>`;
+        debtEl.classList.remove('hidden');
+      } else debtEl.classList.add('hidden');
+    }
     $('#fg-name').textContent = st.goalDone ? '全目標制覇！' : `${st.goalName}（¥${oku(st.goalNext)}）`;
     $('#fg-pct').textContent = st.goalPct.toFixed(st.goalPct < 10 ? 1 : 0) + '%';
     $('#fg-detail').textContent = `　資産 ¥${oku(st.assets)}　📖${Math.min(st.storyChapter + 1, st.chapterCount)}/${st.chapterCount}`;
@@ -66,6 +77,7 @@
     // レート/倍速/玉貸
     const rs = $('#rate-select'); if (rs && +rs.value !== st.rate) rs.value = st.rate;
     const ss = $('#speed-select'); if (ss && +ss.value !== st.speed) ss.value = st.speed;
+    const sps = $('#spec-select'); if (sps && !st.pendingSpec && sps.value !== st.specKey) sps.value = st.specKey;
     $('#lend').textContent = '玉貸 ' + yen(500 * st.rate);
 
     // 変動中ランプ
@@ -286,6 +298,7 @@
       window.MINIGAMES.open();
     });
     $('#minigame .mg-close').addEventListener('click', () => window.MINIGAMES.close());
+    $('#cashing').addEventListener('click', () => { window.AUDIO.resume(); window.MINIGAMES.openCashing(); });
 
     // 音
     $('#volume').addEventListener('input', e => { window.AUDIO.setVolume(parseFloat(e.target.value)); saveAudio(); });
