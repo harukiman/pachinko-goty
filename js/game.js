@@ -293,7 +293,7 @@
       if (!S.firing && !S.auto) { return; }
       // ムービー(ストーリー/OP)再生中は発射を待機（演出が終わったら自動で続行）
       if (window.CINEMA && window.CINEMA.isPlaying) { fireTimer = setTimeout(tick, 200); return; }
-      if (S.balls <= 0) { window.PRODUCTION.msg('玉がありません →「玉貸」で借りる(軍資金が必要)'); stopFiring(); refresh(); return; }
+      if (S.balls <= 0) { window.PRODUCTION.msg('玉がありません →「玉貸」で借りる(軍資金が必要)'); S.firing = false; stopFiring(); refresh(); return; }
       const sp = window.SPEED || 1;
       if (S.holds.length >= MAX_HOLD) {
         // 保留満タンなら発射を控える（玉節約）
