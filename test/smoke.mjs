@@ -97,6 +97,8 @@ const sandbox = {
   setTimeout: fastTO, clearTimeout, setInterval: () => 0, clearInterval: () => {},
   requestAnimationFrame: () => 0, // ループは1回も回さない
   Promise, document,
+  localStorage: { _d: {}, getItem(k) { return this._d[k] || null; }, setItem(k, v) { this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } },
+  confirm: () => true, alert: () => {},
 };
 sandbox.window = sandbox;
 sandbox.self = sandbox;
@@ -106,6 +108,7 @@ vm.createContext(sandbox);
 
 // ---- モジュール読込 ----
 const files = ['js/config.js','js/assets.js','js/audio.js','js/rng.js','js/reels.js',
+               'js/story.js','js/cinema.js','js/minigames.js',
                'js/production.js','js/game.js','js/ui.js','js/main.js'];
 for (const f of files) {
   try { vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sandbox, { filename: f }); }
@@ -144,8 +147,29 @@ async function main() {
     catch (e) { onErr('forcePlay ' + s.name, e); console.log('  [ERR] ' + s.name); }
   }
 
-  // 発射→入賞→消化フローを少し回す
+  // 経済スモーク（玉貸/換金/レート/打ち分け）
   try {
+    const g = sandbox.window.GAME;
+    const r = g.lendBalls(); console.log('  [ok] lend', JSON.stringify(r));
+    g.setUchikata('left'); g.setRate(5); g.setRate(1);
+    g.addMoney(1000); g.cashOut();
+  } catch (e) { onErr('economy', e); console.log('  [ERR] economy'); }
+
+  // ミニゲーム起動スモーク（モーダル/メニュー生成）
+  try {
+    if (sandbox.window.MINIGAMES) { sandbox.window.MINIGAMES.open(); sandbox.window.MINIGAMES.close(); console.log('  [ok] minigames'); }
+  } catch (e) { onErr('minigames', e); console.log('  [ERR] minigames'); }
+
+  // FIRE到達エンディング・スモーク
+  try {
+    sandbox.window.GAME.addMoney(1e8); // 1億→エンディング発火
+    await new Promise(r => realTO(r, 200));
+    console.log('  [ok] ending-milestone (assets=' + sandbox.window.GAME.snapshot().assets + ')');
+  } catch (e) { onErr('ending', e); console.log('  [ERR] ending'); }
+
+  // 発射→入賞→消化フローを少し回す（玉貸して玉を用意）
+  try {
+    sandbox.window.GAME.lendBalls(); sandbox.window.GAME.lendBalls();
     sandbox.window.GAME.fireStart();
     await new Promise(r => realTO(r, 400));
     sandbox.window.GAME.fireStop();

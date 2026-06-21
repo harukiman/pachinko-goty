@@ -182,28 +182,42 @@
   // ---- BGM（ループ）----
   // overlay(リーチ/大当り) を startBgm で再生し、stopBgm で base(確変中) へ自動復帰する。
   const TRACKS = {
-    super:   { tempo: 0.18, type: 'square',   notes: [220, 261.63, 329.63, 392, 329.63, 261.63] },
-    allreel: { tempo: 0.14, type: 'sawtooth', notes: [261.63, 329.63, 392, 523.25, 659.25, 523.25, 392, 329.63] },
-    round:   { tempo: 0.16, type: 'square',   kick: true, lead: true,
-               notes: [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46] },
-    kakuhen: { tempo: 0.15, type: 'square',   kick: true,
-               notes: [440, 554.37, 659.25, 554.37, 493.88, 587.33, 739.99, 587.33] },
+    // 通常時も常時BGM（無音をなくす）。明るく中毒性のあるループ。
+    normal:  { tempo: 0.16, type: 'square', kick: true, lead: true, hat: true, pad: true,
+               notes: [440, 523.25, 659.25, 587.33, 523.25, 659.25, 783.99, 659.25,
+                       523.25, 659.25, 880, 783.99, 659.25, 587.33, 523.25, 493.88] },
+    jitan:   { tempo: 0.155, type: 'square', kick: true, lead: true, hat: true,
+               notes: [392, 493.88, 587.33, 493.88, 440, 523.25, 659.25, 523.25] },
+    super:   { tempo: 0.165, type: 'square', kick: true, hat: true,
+               notes: [220, 261.63, 329.63, 392, 329.63, 261.63, 293.66, 349.23] },
+    allreel: { tempo: 0.13, type: 'sawtooth', kick: true, lead: true, hat: true,
+               notes: [261.63, 329.63, 392, 523.25, 659.25, 523.25, 392, 329.63] },
+    round:   { tempo: 0.15, type: 'square', kick: true, lead: true, hat: true, pad: true,
+               notes: [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46,
+                       783.99, 880, 1046.5, 880, 783.99, 659.25, 587.33, 523.25] },
+    kakuhen: { tempo: 0.14, type: 'square', kick: true, lead: true, hat: true, pad: true,
+               notes: [440, 554.37, 659.25, 554.37, 493.88, 587.33, 739.99, 587.33,
+                       659.25, 739.99, 880, 739.99, 659.25, 554.37, 493.88, 440] },
   };
 
   let current = null;   // 現在の停止関数
-  let baseKind = null;  // 復帰先トラック（確変中など）
+  let baseKind = null;  // 復帰先トラック（通常/確変中など）
 
   function _play(kind) {
     ensure();
-    const tr = TRACKS[kind] || TRACKS.super;
+    const tr = TRACKS[kind] || TRACKS.normal;
     let stopped = false, i = 0, timer = null;
     const tick = () => {
       if (stopped) return;
       const f = tr.notes[i % tr.notes.length];
-      tone({ freq: f, type: tr.type, dur: tr.tempo * 0.9, gain: 0.15 });
-      tone({ freq: f / 2, type: 'triangle', dur: tr.tempo * 0.9, gain: 0.1 });        // ベース
-      if (tr.lead) tone({ freq: f * 2, type: 'square', dur: tr.tempo * 0.5, gain: 0.06 });
-      if (tr.kick && i % 4 === 0) noise({ dur: 0.08, gain: 0.16, lp: 600, hp: 30 });   // キック
+      tone({ freq: f, type: tr.type, dur: tr.tempo * 0.9, gain: 0.14 });
+      tone({ freq: f / 2, type: 'triangle', dur: tr.tempo * 0.95, gain: 0.1 });          // ベース
+      if (tr.lead) tone({ freq: f * 2, type: 'square', dur: tr.tempo * 0.5, gain: 0.05 }); // リード
+      if (tr.kick && i % 4 === 0) noise({ dur: 0.08, gain: 0.16, lp: 600, hp: 30 });      // キック
+      if (tr.hat && i % 2 === 1) noise({ dur: 0.03, gain: 0.06, lp: 9000, hp: 6000 });    // ハイハット
+      if (tr.pad && i % 8 === 0) {                                                         // コードパッド
+        [f, f * 1.26, f * 1.5].forEach(pf => tone({ freq: pf, type: 'triangle', dur: tr.tempo * 7, gain: 0.04 }));
+      }
       i++;
       timer = setTimeout(tick, tr.tempo * 1000);
     };

@@ -7,6 +7,19 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- 軍資金バー（FIRE目標進捗） -->
+  <div id="bankroll">
+    <div class="bk-row">
+      <div class="bk-item"><span>軍資金</span><b id="bk-money">¥0</b></div>
+      <div class="bk-item"><span>持玉価値</span><b id="bk-value">¥0</b></div>
+      <div class="bk-item"><span>収支</span><b id="bk-profit">¥0</b></div>
+    </div>
+    <div id="fire-goal">
+      <div class="fg-label">🌅 FIRE目標 1億円　<span id="fg-pct">0%</span><span id="fg-detail"></span></div>
+      <div class="fg-bar"><span id="fg-fill"></span><i class="fg-mark" style="left:50%"></i><i class="fg-mark" style="left:100%"></i></div>
+    </div>
+  </div>
+
   <!-- 実機データカウンター（台上部の表示機を模す） -->
   <div id="data-counter">
     <div class="dc-cells">
@@ -61,6 +74,7 @@
       <!-- シネマ（ストーリー/ムービー） -->
       <div id="cinema" class="fx">
         <div class="cine-bg"></div>
+        <div class="cine-fxlayer"></div>
         <div class="cine-bars"></div>
         <img class="cine-char" alt="">
         <div class="cine-title"></div>
@@ -84,10 +98,26 @@
     <!-- 玉レーン（簡易演出）-->
     <canvas id="lane" width="320" height="90"></canvas>
 
+    <!-- 打ち分け（左/右打ち） -->
+    <div id="uchi">
+      <button id="uchi-left" class="uchi-btn active">左打ち</button>
+      <button id="uchi-right" class="uchi-btn">右打ち</button>
+    </div>
+
     <!-- 操作 -->
     <div id="controls">
-      <button id="fire" class="big-btn">発射 / 打ち出し</button>
+      <button id="fire" class="big-btn">🔼 発射（長押し）</button>
       <button id="auto" class="toggle-btn">オート OFF</button>
+    </div>
+
+    <!-- 玉貸・換金・バイト -->
+    <div id="shop">
+      <label class="rate-label">レート
+        <select id="rate-select"></select>
+      </label>
+      <button id="lend" class="shop-btn lend">玉貸</button>
+      <button id="cashout" class="shop-btn">換金</button>
+      <button id="bait" class="shop-btn bait">💼 バイト</button>
     </div>
 
     <!-- 設定・情報 -->
@@ -104,19 +134,20 @@
       <div class="row">
         <button id="toggle-story" class="toggle-btn active">🎬 ムービー ON</button>
         <button id="replay-op" class="toggle-btn">OP再生</button>
-      </div>
-      <div class="row">
-        <button id="toggle-debug" class="toggle-btn">デバッグ ▼</button>
-        <button id="reset" class="toggle-btn">玉追加 +500</button>
-      </div>
-      <div id="debug" class="hidden">
-        <div class="debug-title">強制発火（演出確認）</div>
-        <div id="debug-buttons"></div>
+        <button id="data-delete" class="toggle-btn danger">🗑 データ削除</button>
       </div>
       <div id="reliability" class="info"></div>
     </div>
   </div><!-- /#machine -->
   </div><!-- /#cabinet -->
+
+  <!-- バイト（ミニゲーム）モーダル -->
+  <div id="minigame" class="modal hidden">
+    <div class="mg-panel">
+      <div class="mg-header"><span class="mg-title">💼 バイト</span><button class="mg-close">✕</button></div>
+      <div class="mg-body"></div>
+    </div>
+  </div>
 
   <!-- 読み込み順序が依存関係 -->
   <script src="js/config.js"></script>
@@ -126,6 +157,7 @@
   <script src="js/reels.js"></script>
   <script src="js/story.js"></script>
   <script src="js/cinema.js"></script>
+  <script src="js/minigames.js"></script>
   <script src="js/production.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ui.js"></script>

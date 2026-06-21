@@ -35,21 +35,22 @@ const KAKUHEN_SYMBOLS = ['doya', 'legend', 'black'];
  *  - payoutPerRound: 1ラウンドあたりの出玉(概算)
  *  - reachRate  : ハズレ時にリーチへ発展する割合(演出頻度の素)
  */
+// ※実機よりも大幅に甘め（当たりやすい）設定。
 const SPECS = {
   amadeji: {
-    name: '甘デジ', normalOdds: 99, kakuhenOdds: 99 / 3.3,
-    kakuhenRate: 0.55, stCount: 80, rounds: 4, payoutPerRound: 75,
-    reachRate: 0.18,
+    name: '激甘デジ', normalOdds: 50, kakuhenOdds: 10,
+    kakuhenRate: 0.70, stCount: 100, rounds: 5, payoutPerRound: 80,
+    reachRate: 0.30,
   },
   light: {
-    name: 'ライトミドル', normalOdds: 199, kakuhenOdds: 199 / 3.3,
-    kakuhenRate: 0.65, stCount: 80, rounds: 7, payoutPerRound: 65,
-    reachRate: 0.14,
+    name: 'ライト', normalOdds: 99, kakuhenOdds: 18,
+    kakuhenRate: 0.75, stCount: 120, rounds: 8, payoutPerRound: 100,
+    reachRate: 0.26,
   },
   middle: {
-    name: 'ミドル', normalOdds: 319, kakuhenOdds: 65,
-    kakuhenRate: 0.80, stCount: 120, rounds: 10, payoutPerRound: 150,
-    reachRate: 0.11,
+    name: 'ミドル', normalOdds: 199, kakuhenOdds: 30,
+    kakuhenRate: 0.85, stCount: 150, rounds: 10, payoutPerRound: 160,
+    reachRate: 0.22,
   },
 };
 

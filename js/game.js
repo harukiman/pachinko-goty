@@ -7,7 +7,17 @@
   const C = window.CONFIG;
   const MAX_HOLD = 4;
 
-  const START_BALLS = 500;
+  const START_BALLS = 0;
+  const INITIAL_MONEY = 30000;        // 開始軍資金（円）
+  const LEND_LOT = 500;               // 1回の玉貸玉数
+  const RATES = [1, 5, 100, 1000, 10000]; // 円/玉
+  // FIRE マイルストーン（総資産・円）
+  const MILESTONES = [
+    { amt: 1e8,  key: 'oku1',  level: 1 },
+    { amt: 5e8,  key: 'oku5',  level: 5 },
+    { amt: 1e9,  key: 'oku10', level: 10 },
+  ];
+
   const S = {
     specKey: C.DEFAULT_SPEC,
     spec: C.SPECS[C.DEFAULT_SPEC],
@@ -21,6 +31,12 @@
     busy: false,        // スピン/大当り再生中
     firing: false,
     auto: false,
+    uchikata: 'left',   // 打ち分け（left/right）。電サポ中は right が正解
+    // 経済
+    money: INITIAL_MONEY,   // 軍資金（円）
+    rate: 1,                // 円/玉
+    peakAssets: INITIAL_MONEY,
+    milestonesHit: {},      // FIRE到達フラグ
     // 実機データカウンター用
     bigHits: 0,         // 大当り回数
     kakuhenCount: 0,    // 確変回数
@@ -30,17 +46,56 @@
     history: [],        // スランプグラフ用 {n, diff}
   };
 
+  function assets() { return S.money + S.balls * S.rate; }
+
+  // ---- セーブ/ロード（localStorage）----
+  const SAVE_KEY = 'crfl_save_v1';
+  function save() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        money: S.money, rate: S.rate, specKey: S.specKey, balls: S.balls,
+        peakAssets: S.peakAssets, milestonesHit: S.milestonesHit,
+        bigHits: S.bigHits, kakuhenCount: S.kakuhenCount, maxRenchan: S.maxRenchan, spins: S.spins,
+      }));
+    } catch (_) {}
+  }
+  function load() {
+    try {
+      const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (!d) return;
+      if (C.SPECS[d.specKey]) { S.specKey = d.specKey; S.spec = C.SPECS[d.specKey]; }
+      if (typeof d.money === 'number') S.money = d.money;
+      if (RATES.includes(d.rate)) S.rate = d.rate;
+      if (typeof d.balls === 'number') S.balls = d.balls;
+      if (typeof d.peakAssets === 'number') S.peakAssets = d.peakAssets;
+      if (d.milestonesHit) S.milestonesHit = d.milestonesHit;
+      ['bigHits', 'kakuhenCount', 'maxRenchan', 'spins'].forEach(k => { if (typeof d[k] === 'number') S[k] = d[k]; });
+      S.startBalls = S.balls;
+    } catch (_) {}
+  }
+  function resetSave() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+    S.money = INITIAL_MONEY; S.rate = 1; S.balls = 0; S.peakAssets = INITIAL_MONEY;
+    S.milestonesHit = {}; S.bigHits = S.kakuhenCount = S.maxRenchan = S.spins = 0;
+    S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
+    S.startBalls = 0; S.history = [];
+    if (window.AUDIO) window.AUDIO.setBaseBgm('normal');
+    refresh();
+  }
+
   let onChange = () => {};
   let lane = null, laneCtx = null, balls2d = [], pegs = [];
 
   function init(opts) {
     onChange = opts.onChange || (() => {});
+    load();
     setupLane();
     requestAnimationFrame(laneLoop);
     refresh();
   }
   function refresh() { onChange(snapshot()); }
   function snapshot() {
+    const A = assets();
     return {
       specKey: S.specKey, specName: S.spec.name, balls: Math.max(0, Math.floor(S.balls)),
       spins: S.spins, renchan: S.renchan, holds: S.holds.map(h => h.holdDef),
@@ -48,6 +103,10 @@
       stRemaining: S.stRemaining,
       bigHits: S.bigHits, kakuhenCount: S.kakuhenCount, maxRenchan: S.maxRenchan, sinceHit: S.sinceHit,
       diff: Math.floor(S.balls - S.startBalls), history: S.history, spinning: S.busy,
+      money: S.money, rate: S.rate, ballValue: S.balls * S.rate, assets: A,
+      profit: A - INITIAL_MONEY, peakAssets: S.peakAssets,
+      goalPct: Math.min(100, A / 1e8 * 100), rates: RATES,
+      uchikata: S.uchikata, needRight: needRight(),
     };
   }
 
@@ -59,9 +118,16 @@
   function currentPHit() {
     return 1 / (S.kakuhen ? S.spec.kakuhenOdds : S.spec.normalOdds);
   }
+  function needRight() { return S.kakuhen || S.jitan; }   // 電サポ中は右打ち
   function startChance() {
-    // 電サポ中(確変/時短)は玉が減らず連チャンしやすい
-    return (S.kakuhen || S.jitan) ? 0.85 : 0.16;
+    // 打ち分けが正しいときだけ始動口/電チューに入りやすい。間違うと玉が減るだけ。
+    const correct = needRight() ? S.uchikata === 'right' : S.uchikata === 'left';
+    const base = needRight() ? 0.88 : 0.18;
+    return correct ? base : base * 0.04;
+  }
+  function setUchikata(d) {
+    if (d !== 'left' && d !== 'right') return;
+    S.uchikata = d; refresh();
   }
 
   // 1回転ぶんの抽選を生成（保留作成時に確定）
@@ -82,7 +148,7 @@
     if (window.AUDIO) window.AUDIO.resume();
     const tick = () => {
       if (!S.firing && !S.auto) { return; }
-      if (S.balls <= 0) { PRODUCTION.msg('玉が無くなりました（玉追加で補給）'); stopFiring(); refresh(); return; }
+      if (S.balls <= 0) { window.PRODUCTION.msg('玉がありません →「玉貸」で借りる(軍資金が必要)'); stopFiring(); refresh(); return; }
       if (S.holds.length >= MAX_HOLD) {
         // 保留満タンなら発射を控える（玉節約）
         fireTimer = setTimeout(tick, 200); return;
@@ -178,30 +244,73 @@
     else { S.kakuhen = false; S.jitan = true; }
     S.stRemaining = spec.stCount;
     // 覚醒RUSH/時短 突入ムービー
-    if (window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY) {
-      await window.CINEMA.play(window.STORY.awaken(willKakuhen), { skippable: true });
-    }
-    if (window.AUDIO) window.AUDIO.setBaseBgm(S.kakuhen ? 'kakuhen' : null); // 確変中BGM
+    if (storyOn()) await window.CINEMA.play(window.STORY.awaken(willKakuhen), { skippable: true });
+    if (window.AUDIO) window.AUDIO.setBaseBgm(S.kakuhen ? 'kakuhen' : 'jitan'); // 確変/時短BGM
+    updatePeak();
+    save();
+    await checkMilestones();   // FIRE到達チェック
     refresh();
   }
 
   function endST() {
     S.kakuhen = false; S.jitan = false; S.stRemaining = 0; S.renchan = 0;
-    if (window.AUDIO) window.AUDIO.stopAllBgm();
+    if (window.AUDIO) window.AUDIO.setBaseBgm('normal'); // 通常時も常時BGM
     window.PRODUCTION.msg('通常モードへ戻りました');
-    refresh();
+    save(); refresh();
+  }
+
+  function storyOn() { return window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY; }
+  function updatePeak() { const a = assets(); if (a > S.peakAssets) S.peakAssets = a; }
+
+  // FIRE マイルストーン到達でエンディング/特殊ムービー
+  async function checkMilestones() {
+    const a = assets();
+    for (const m of MILESTONES) {
+      if (a >= m.amt && !S.milestonesHit[m.key]) {
+        S.milestonesHit[m.key] = true; save();
+        if (storyOn()) await window.CINEMA.play(window.STORY.ending(m.level), { bgm: 'allreel', skippable: false });
+      }
+    }
   }
 
   function addBalls(n) { S.balls += n; refresh(); }
+
+  // ---- 経済（玉貸/換金/レート）----
+  function lendBalls() {
+    if (S.busy) return { ok: false, reason: 'busy' };
+    const cost = LEND_LOT * S.rate;
+    if (S.money < S.rate) return { ok: false, reason: 'nomoney' };  // 1玉も貸せない
+    const lot = S.money >= cost ? LEND_LOT : Math.floor(S.money / S.rate);
+    S.money -= lot * S.rate;
+    S.balls += lot;
+    if (window.AUDIO) window.AUDIO.SE.start();
+    save(); refresh();
+    return { ok: true, lot };
+  }
+  function cashOut() {
+    if (S.busy || S.balls <= 0) return;
+    S.money += S.balls * S.rate;
+    S.balls = 0;
+    if (window.AUDIO) window.AUDIO.SE.kakutei();
+    updatePeak(); save(); refresh();
+  }
+  function setRate(r) {
+    if (S.busy || !RATES.includes(r)) return;
+    if (S.balls > 0) { S.money += S.balls * S.rate; S.balls = 0; } // 一旦換金
+    S.rate = r;
+    S.startBalls = 0; S.history = [];
+    save(); refresh();
+  }
+  function addMoney(n) { S.money += Math.max(0, Math.floor(n)); updatePeak(); save(); refresh(); }
   function setSpec(key) {
     if (!C.SPECS[key] || S.busy) return;
     S.specKey = key; S.spec = C.SPECS[key];
     S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
-    // 台移動 = データリセット
+    // 台移動 = データリセット（軍資金/レートは維持）
     S.spins = 0; S.bigHits = 0; S.kakuhenCount = 0; S.maxRenchan = 0; S.sinceHit = 0;
     S.startBalls = S.balls; S.history = [];
-    if (window.AUDIO) window.AUDIO.stopAllBgm();
-    refresh();
+    if (window.AUDIO) window.AUDIO.setBaseBgm('normal');
+    save(); refresh();
   }
 
   // ---- デバッグ強制再生 ----
@@ -276,5 +385,6 @@
   }
 
   window.GAME = { init, fireStart, fireStop, setAuto, setSpec, addBalls, forcePlay,
+                  lendBalls, cashOut, setRate, addMoney, resetSave, save, setUchikata,
                   snapshot, get isBusy() { return S.busy; } };
 })();

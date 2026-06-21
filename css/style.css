@@ -219,7 +219,38 @@ img,canvas{max-width:100%;}
 #cinema .cine-skip{position:absolute;top:13%;right:8px;z-index:5;font-size:11px;color:rgba(255,255,255,.6);}
 #cinema.cine-shake{animation:shake .3s ease-in-out;}
 #cinema.cine-flash::after{content:'';position:absolute;inset:0;background:#fff;z-index:6;
-  pointer-events:none;animation:boom .4s ease-out;}
+  pointer-events:none;opacity:0;animation:boom .4s ease-out;}
+
+/* アニメ背景 */
+.cine-bg.bg-space{background:radial-gradient(1px 1px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 60%,#fff,transparent),radial-gradient(1px 1px at 40% 80%,#bcd,transparent),linear-gradient(160deg,#0a0a2a,#05010f);background-size:cover;animation:bgPan 10s linear infinite;}
+.cine-bg.bg-fire{background:radial-gradient(circle at 50% 120%,#ff6a00,#7a0000 45%,#1a0000);animation:bgPulse 1.2s ease-in-out infinite;}
+.cine-bg.bg-rush{background:linear-gradient(120deg,#ff3b00,#ffae00,#ff3b00);background-size:300% 100%;animation:bgScroll 1.5s linear infinite;}
+.cine-bg.bg-gold{background:radial-gradient(circle at 50% 40%,#fff3b0,#d4a017 40%,#5a3a00);animation:bgPulse 1.4s ease-in-out infinite;}
+.cine-bg.bg-legend{background:linear-gradient(160deg,#3a0a4a,#10003a,#0a0020);background-size:200% 200%;animation:bgPan 8s ease-in-out infinite;}
+.cine-bg.bg-thunder{background:linear-gradient(160deg,#1a1030,#000);animation:bgThunder 2.4s steps(1) infinite;}
+.cine-bg.bg-speed{background:repeating-linear-gradient(100deg,#000 0 14px,#1a1030 14px 18px);animation:bgScroll .5s linear infinite;}
+.cine-bg.bg-aurora{background:linear-gradient(120deg,#00ffa3,#3a7bff,#ff6ec7,#ffd23b);background-size:300% 300%;animation:bgPan 6s ease-in-out infinite;opacity:.85;}
+.cine-bg.bg-photo{animation:bgKen 8s ease-in-out infinite alternate;}
+@keyframes bgPan{0%{background-position:0% 0%;}100%{background-position:100% 100%;}}
+@keyframes bgScroll{0%{background-position:0 0;}100%{background-position:300px 0;}}
+@keyframes bgPulse{50%{filter:brightness(1.5);}}
+@keyframes bgThunder{0%,92%{filter:brightness(.7);}94%{filter:brightness(2.4);}96%{filter:brightness(.8);}98%{filter:brightness(2);}}
+@keyframes bgKen{0%{transform:scale(1);}100%{transform:scale(1.18);}}
+/* スピード線/バースト FXレイヤ */
+.cine-fxlayer{position:absolute;inset:0;z-index:2;pointer-events:none;}
+.cine-fxlayer.fx-speed{background:repeating-linear-gradient(95deg,rgba(255,255,255,.5) 0 2px,transparent 2px 12px);animation:bgScroll .35s linear infinite;mix-blend-mode:screen;}
+.cine-fxlayer.fx-burst{background:radial-gradient(circle at 50% 50%,rgba(255,240,180,.7),transparent 60%);animation:burst .5s ease-out;}
+@keyframes burst{0%{transform:scale(.2);opacity:1;}100%{transform:scale(2);opacity:0;}}
+/* 立ち絵の別形態フィルター（画像数を増やす） */
+.cine-char.form-dark{filter:brightness(.25) contrast(1.4) drop-shadow(0 0 12px #ff0000);}
+.cine-char.form-awaken{filter:saturate(2) hue-rotate(-20deg) brightness(1.15) drop-shadow(0 0 16px #ffd23b);}
+.cine-char.form-gold{filter:sepia(1) saturate(3) hue-rotate(-15deg) brightness(1.1) drop-shadow(0 0 16px #ffd23b);}
+.cine-char.form-neg{filter:invert(1) hue-rotate(180deg);}
+.cine-char.form-ghost{filter:brightness(1.3) contrast(.8) hue-rotate(40deg) drop-shadow(0 0 18px #ff6ec7);opacity:.92;}
+.cine-char.kenburns{animation:cineIn .4s cubic-bezier(.2,1.2,.4,1),kenburns 6s ease-in-out infinite alternate .4s;}
+@keyframes kenburns{0%{transform:scale(1) translateY(0);}100%{transform:scale(1.12) translateY(-4%);}}
+.cine-char.pos-left{left:6%;right:auto;}
+.cine-char.pos-center{left:50%;right:auto;transform:translateX(-50%);}
 
 /* メッセージ */
 .msg{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:13px;
@@ -301,4 +332,80 @@ img,canvas{max-width:100%;}
 /* 横向き/低い画面でも縦に収める */
 @media(max-height:700px){
   #screen{aspect-ratio:auto;height:min(46vh,300px);}
+}
+
+/* ===== 軍資金バー / FIRE目標 ===== */
+#bankroll{max-width:480px;margin:0 auto 6px;background:#0a0712;border:1px solid var(--line);
+  border-radius:10px;padding:7px 9px;}
+.bk-row{display:flex;gap:6px;}
+.bk-item{flex:1;text-align:center;min-width:0;}
+.bk-item span{display:block;font-size:9px;color:#8c79b0;}
+.bk-item b{font-size:clamp(13px,4.4vw,18px);font-variant-numeric:tabular-nums;color:#ffd23b;white-space:nowrap;}
+#bk-profit{color:#39d353;}
+#fire-goal{margin-top:6px;}
+.fg-label{font-size:10px;color:#cbb8ec;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.fg-label #fg-pct{color:#ffd23b;font-weight:800;}
+.fg-label #fg-detail{color:#7d6aa3;}
+.fg-bar{position:relative;height:10px;margin-top:3px;background:#160c24;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+#fg-fill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:6px;
+  background:linear-gradient(90deg,#39d353,#ffd23b,#ff6ec7);transition:width .5s;}
+.fg-mark{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);}
+
+/* ===== 打ち分け ===== */
+#uchi{display:flex;gap:8px;margin:8px 0 0;}
+.uchi-btn{flex:1;padding:9px;font-size:14px;font-weight:800;border:1px solid var(--line);
+  border-radius:9px;background:#160c24;color:#9d86c4;cursor:pointer;}
+.uchi-btn.active{background:linear-gradient(180deg,#3af0ff,#1380ff);color:#021;}
+.uchi-btn.need{animation:needBlink .6s steps(1) infinite;}
+@keyframes needBlink{50%{background:linear-gradient(180deg,#ffd23b,#ff8a00);color:#1a0b2e;}}
+
+/* ===== ショップ（玉貸/換金/バイト/レート） ===== */
+#shop{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+.rate-label{font-size:12px;color:#cbb8ec;display:flex;align-items:center;gap:4px;}
+#rate-select{background:#0e0820;color:#fff;border:1px solid var(--line);border-radius:8px;padding:6px;font-size:13px;}
+.shop-btn{flex:1;min-width:64px;padding:11px 8px;font-size:14px;font-weight:800;border:none;border-radius:9px;
+  background:#26203a;color:#fff;cursor:pointer;}
+.shop-btn.lend{background:linear-gradient(180deg,#ffe27a,#ffb300);color:#1a0b2e;}
+.shop-btn.bait{background:linear-gradient(180deg,#7affa0,#19c46a);color:#04210f;}
+.shop-btn:active{transform:translateY(2px);}
+.danger{color:#ff9b9b !important;}
+
+/* ===== バイト ミニゲーム モーダル ===== */
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(2,1,8,.8);padding:12px;}
+.modal.hidden{display:none;}
+.mg-panel{width:100%;max-width:420px;max-height:90vh;overflow:auto;background:linear-gradient(160deg,#1a1030,#0a0618);
+  border:2px solid var(--line);border-radius:14px;box-shadow:0 0 40px rgba(58,240,255,.2);}
+.mg-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);}
+.mg-title{font-size:18px;font-weight:900;color:#ffd23b;}
+.mg-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
+.mg-body{padding:14px;min-height:230px;display:flex;flex-direction:column;gap:12px;align-items:center;}
+.mg-intro{font-size:13px;color:#cbb8ec;text-align:center;margin:0;}
+.mg-list{display:flex;flex-direction:column;gap:10px;width:100%;}
+.mg-game-btn{display:flex;flex-direction:column;gap:2px;padding:14px;border:1px solid var(--line);border-radius:10px;
+  background:#160c24;color:#fff;cursor:pointer;text-align:left;}
+.mg-game-btn b{font-size:17px;}
+.mg-game-btn small{font-size:12px;color:#9d86c4;}
+.mg-info{font-size:16px;font-weight:800;color:#3af0ff;text-align:center;font-variant-numeric:tabular-nums;}
+.mg-btn{padding:12px 18px;font-size:15px;font-weight:800;border:none;border-radius:10px;
+  background:linear-gradient(180deg,#ffe27a,#ffb300);color:#1a0b2e;cursor:pointer;}
+.mg-btn.wide{width:100%;}
+.mg-btnrow{display:flex;gap:10px;}
+.mg-result{text-align:center;font-size:16px;color:#fff;line-height:1.7;}
+.mg-reward{font-size:30px;font-weight:900;color:#ffd23b;font-variant-numeric:tabular-nums;}
+.mg-taiko{width:160px;height:160px;border-radius:50%;border:5px solid #fff;font-size:22px;font-weight:900;
+  background:radial-gradient(circle at 38% 32%,#ff8a8a,#e60000 60%,#7a0000);color:#fff;cursor:pointer;user-select:none;touch-action:none;}
+.mg-taiko.hit{animation:thunk .12s ease-out;}
+.mg-bar{position:relative;width:100%;height:34px;background:#0e0820;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.mg-zone{position:absolute;top:0;bottom:0;background:rgba(57,211,83,.5);border-left:2px solid #39d353;border-right:2px solid #39d353;}
+.mg-cursor{position:absolute;top:0;bottom:0;width:4px;background:#ffd23b;box-shadow:0 0 8px #ffd23b;}
+.mg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:280px;}
+.mg-hole{aspect-ratio:1;border-radius:50%;border:2px solid #2a1840;background:#160c24;font-size:30px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;touch-action:none;}
+.mg-hole.up{background:#26203a;animation:thunk .15s ease-out;}
+
+@media(max-width:400px){
+  .shop-btn{font-size:13px;padding:10px 5px;min-width:54px;}
+  .bk-item b{font-size:14px;}
+  .mg-taiko{width:130px;height:130px;}
 }
