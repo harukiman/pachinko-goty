@@ -34,8 +34,8 @@
   function opening() {
     return [
       t('CR フレンズ伝説', '〜50年後の君へ〜', { bg: 'bg-legend', color: '#ff6ec7', dur: 1800 }),
-      t('', '西暦20XX——　パチンコで一億を稼ぎ', { bg: 'bg-space', dur: 1500 }),
-      t('', '自由を掴む「FIRE」を目指す者がいた。', { bg: 'bg-space', dur: 1600 }),
+      { title: '', text: '西暦20XX——　ひしめくパチンコホール。', bgImg: 'bg_crowd.jpg', dur: 1600 },
+      t('', 'パチンコで一億を稼ぎ「FIRE」を目指す者がいた。', { bg: 'bg-space', dur: 1700 }),
       { char: C.peace.img, name: C.peace.name, color: C.peace.color, text: 'オレはピース小僧！　一億稼いで、絶対FIREしてやる！', bgImg: 'bg_skytree.jpg', fx: 'zoom', kb: true, dur: 1700 },
       sc('pepper', '相棒のペッパーだ。データ分析は任せろ、ピピッ。', { bg: 'bg-space', kb: true, dur: 1500 }),
       sc('dog', '（幸運の子犬モモも応援してるワン！）', { bg: 'bg-aurora', kb: true, dur: 1300 }),
@@ -47,8 +47,8 @@
 
   // リーチ帯ごとに敵プールからランダム選出（毎回違う相手で飽きさせない）
   const POOL = {
-    super:     ['doya', 'gian', 'gorilla', 'jono'],
-    cutin_red: ['black', 'general', 'gorilla'],
+    super:     ['doya', 'gian', 'gorilla', 'jono', 'alien'],
+    cutin_red: ['black', 'general', 'gorilla', 'alien'],
     cutin_gold:['hero', 'gent', 'cool'],
     allreel:   ['legend'],
   };

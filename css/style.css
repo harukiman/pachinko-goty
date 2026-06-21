@@ -409,3 +409,117 @@ img,canvas{max-width:100%;}
   .bk-item b{font-size:14px;}
   .mg-taiko{width:130px;height:130px;}
 }
+
+/* ===== ミニゲーム 追加要素 ===== */
+#shop2{display:flex;gap:6px;margin-top:6px;}
+.mg-combo{font-size:18px;font-weight:900;color:#ff6ec7;min-height:1.2em;text-align:center;}
+.mg-rank{font-size:20px;font-weight:900;color:#ffd23b;}
+.mg-warn{font-size:12px;color:#ff9b9b;text-align:center;background:rgba(255,59,59,.1);
+  border:1px solid #ff3b3b;border-radius:8px;padding:6px;margin:0;}
+.mg-receipt{font-size:14px;color:#fff;background:#0e0820;border:1px dashed var(--line);
+  border-radius:8px;padding:10px;width:100%;text-align:center;line-height:1.7;}
+.mg-receipt hr{border:none;border-top:1px dashed var(--line);margin:6px 0;}
+.mg-opts{display:flex;flex-direction:column;gap:8px;width:100%;}
+.mg-opt{padding:12px;font-size:17px;font-weight:800;border:1px solid var(--line);border-radius:10px;
+  background:#160c24;color:#fff;cursor:pointer;font-variant-numeric:tabular-nums;}
+.mg-opt:active{background:#2a1840;}
+.mg-sort{position:relative;width:100%;height:120px;background:#0e0820;border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;}
+.mg-pkg{display:none;width:54px;height:54px;border-radius:8px;margin-top:8px;font-size:32px;
+  display:flex;align-items:center;justify-content:center;}
+.mg-pkg.drop{animation:pkgDrop .5s ease-in;}
+@keyframes pkgDrop{0%{transform:translateY(-20px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+.mg-meter{width:100%;height:14px;background:#0e0820;border:1px solid var(--line);border-radius:7px;overflow:hidden;}
+.mg-meter span{display:block;height:100%;width:0;background:linear-gradient(90deg,#39d353,#ffd23b);transition:width .1s;}
+.mg-pad{aspect-ratio:1;border-radius:12px;border:2px solid #000;cursor:pointer;transition:opacity .1s;}
+.mg-chart{width:100%;max-width:300px;background:#070a12;border:1px solid var(--line);border-radius:8px;}
+.mg-game-btn.dark{border-color:#5a2a5a;background:linear-gradient(160deg,#1a0a1a,#0a0512);}
+.mg-game-btn.dark b{color:#d08aff;}
+.mg-result.arrested{color:#ff6b6b;}
+.mg-result.arrested{animation:shake .4s;}
+
+/* ===== 倍率セレクト ===== */
+#speed-select{background:#0e0820;color:#fff;border:1px solid var(--line);border-radius:8px;padding:6px;font-size:13px;}
+
+/* ===== 実績トースト ===== */
+#toast-wrap{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:60;display:flex;
+  flex-direction:column;gap:6px;width:min(420px,94vw);pointer-events:none;}
+.toast{background:linear-gradient(90deg,#3a2c0a,#7a5a00);border:1px solid #ffd23b;border-radius:10px;
+  padding:8px 12px;color:#fff;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.5);
+  animation:toastIn .3s ease-out, toastOut .3s ease-in 2.7s forwards;}
+.toast b{color:#ffd23b;}
+@keyframes toastIn{0%{transform:translateY(-20px);opacity:0;}100%{transform:none;opacity:1;}}
+@keyframes toastOut{100%{transform:translateY(-20px);opacity:0;}}
+
+/* ===== 実績一覧 ===== */
+.ach-item{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;
+  padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#160c24;}
+.ach-item.locked{opacity:.45;}
+.ach-item .ach-name{font-weight:800;}
+.ach-item .ach-desc{font-size:11px;color:#9d86c4;}
+.ach-item .ach-rw{font-size:11px;color:#ffd23b;white-space:nowrap;}
+
+/* ===== チュートリアル ===== */
+.tut-step{display:flex;gap:10px;align-items:flex-start;width:100%;padding:8px;border-bottom:1px solid var(--line);}
+.tut-step .tut-no{flex:0 0 26px;height:26px;border-radius:50%;background:linear-gradient(180deg,#ffe27a,#ffb300);
+  color:#1a0b2e;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.tut-step .tut-txt{font-size:13px;line-height:1.5;}
+.tut-step .tut-txt b{color:#ffd23b;}
+
+/* =========================================================
+   品質向上パス：フォント＆ボタン質感（後勝ちで上書き）
+   ========================================================= */
+body{font-family:"M PLUS Rounded 1c","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;}
+#topbar .title,#fx-result .result-text,#fx-su .su-text,.round-head,.kakutei-text,
+#cinema .cine-title,.mg-title,.dc-cell b{font-family:"Dela Gothic One","M PLUS Rounded 1c",sans-serif;}
+
+/* 共通ボタン質感（光沢＋立体＋押下） */
+.big-btn,.toggle-btn,.shop-btn,.mg-btn,.uchi-btn,.mg-game-btn,.mg-opt{
+  position:relative;border:none;border-radius:12px;cursor:pointer;font-weight:800;
+  font-family:inherit;letter-spacing:.5px;transition:transform .08s,filter .15s,box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;}
+.big-btn::after,.shop-btn::after,.mg-btn::after,.uchi-btn.active::after{
+  content:'';position:absolute;left:6%;right:6%;top:5%;height:38%;border-radius:10px;
+  background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none;}
+
+/* 発射：大型・極厚 */
+.big-btn{flex:2;padding:18px;font-size:19px;font-weight:900;color:#3a1500;
+  background:linear-gradient(180deg,#fff0a8,#ffd23b 40%,#ff9d00);
+  box-shadow:0 6px 0 #a85e00,0 10px 18px rgba(0,0,0,.45);text-shadow:0 1px 0 rgba(255,255,255,.4);}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #a85e00,0 4px 10px rgba(0,0,0,.4);}
+
+/* トグル：ガラス風 */
+.toggle-btn{padding:11px 10px;font-size:13px;color:#e8dcff;
+  background:linear-gradient(180deg,#241636,#160c24);border:1px solid #3a2c4a;
+  box-shadow:0 2px 0 #0c0716,inset 0 1px 0 rgba(255,255,255,.06);}
+.toggle-btn:active{transform:translateY(2px);box-shadow:0 0 0 #0c0716;}
+.toggle-btn.active{background:linear-gradient(180deg,#5cf0ff,#1186ff);color:#021;border-color:#9ff;
+  box-shadow:0 0 14px rgba(58,240,255,.5),0 2px 0 #0b4a7a;}
+.toggle-btn.danger{color:#ffb3b3;border-color:#5a2030;}
+
+/* ショップ／ミニゲーム ボタン */
+.shop-btn{padding:12px 8px;font-size:15px;color:#1a0b2e;
+  background:linear-gradient(180deg,#fff,#c9d4e6);box-shadow:0 4px 0 #6a7790,0 6px 12px rgba(0,0,0,.35);}
+.shop-btn.lend{background:linear-gradient(180deg,#fff0a8,#ffc23b);box-shadow:0 4px 0 #a86a00,0 6px 12px rgba(0,0,0,.35);}
+.shop-btn.bait{background:linear-gradient(180deg,#b6ffcf,#28d56e);color:#04210f;box-shadow:0 4px 0 #137a3a,0 6px 12px rgba(0,0,0,.35);}
+.shop-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6a7790;}
+.mg-btn{padding:12px 18px;font-size:15px;color:#3a1500;
+  background:linear-gradient(180deg,#fff0a8,#ffc23b);box-shadow:0 4px 0 #a86a00,0 6px 12px rgba(0,0,0,.35);}
+.mg-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a86a00;}
+
+/* 打ち分け：物理ボタン風 */
+.uchi-btn{padding:11px;font-size:15px;color:#cdbbf0;
+  background:linear-gradient(180deg,#2a1c40,#160c24);border:1px solid #3a2c4a;box-shadow:0 3px 0 #0c0716;}
+.uchi-btn:active{transform:translateY(2px);}
+.uchi-btn.active{background:linear-gradient(180deg,#5cf0ff,#1186ff);color:#021;box-shadow:0 3px 0 #0b4a7a,0 0 14px rgba(58,240,255,.5);}
+
+/* メニュー項目カード */
+.mg-game-btn{background:linear-gradient(180deg,#221536,#160c24);border:1px solid #3a2c4a;
+  box-shadow:0 3px 0 #0c0716,inset 0 1px 0 rgba(255,255,255,.05);}
+.mg-game-btn:active{transform:translateY(2px);}
+.mg-opt{background:linear-gradient(180deg,#221536,#160c24);border:1px solid #3a2c4a;box-shadow:0 3px 0 #0c0716;}
+
+/* パネル/モーダルの質感 */
+#panel,#bankroll,#data-counter{box-shadow:0 4px 14px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);}
+.mg-panel{box-shadow:0 0 0 1px rgba(255,255,255,.05),0 20px 60px rgba(0,0,0,.7),0 0 50px rgba(58,240,255,.18);}
+select{font-family:inherit;font-weight:700;}

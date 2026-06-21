@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>激熱デジパチ - CR フレンズ伝説</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -115,6 +118,11 @@
       <label class="rate-label">レート
         <select id="rate-select"></select>
       </label>
+      <label class="rate-label">倍速
+        <select id="speed-select"></select>
+      </label>
+    </div>
+    <div id="shop2">
       <button id="lend" class="shop-btn lend">玉貸</button>
       <button id="cashout" class="shop-btn">換金</button>
       <button id="bait" class="shop-btn bait">💼 バイト</button>
@@ -133,7 +141,12 @@
       </div>
       <div class="row">
         <button id="toggle-story" class="toggle-btn active">🎬 ムービー ON</button>
+        <button id="toggle-fastprod" class="toggle-btn">⏩ 演出も倍速 OFF</button>
+        <button id="achievements" class="toggle-btn">🏆 実績</button>
+      </div>
+      <div class="row">
         <button id="replay-op" class="toggle-btn">OP再生</button>
+        <button id="replay-tut" class="toggle-btn">遊び方</button>
         <button id="data-delete" class="toggle-btn danger">🗑 データ削除</button>
       </div>
       <div id="reliability" class="info"></div>
@@ -148,6 +161,25 @@
       <div class="mg-body"></div>
     </div>
   </div>
+
+  <!-- 実績モーダル -->
+  <div id="ach-modal" class="modal hidden">
+    <div class="mg-panel">
+      <div class="mg-header"><span class="mg-title">🏆 実績</span><button id="ach-close" class="mg-close">✕</button></div>
+      <div id="ach-body" class="mg-body"></div>
+    </div>
+  </div>
+
+  <!-- チュートリアル -->
+  <div id="tutorial" class="modal hidden">
+    <div class="mg-panel">
+      <div class="mg-header"><span class="mg-title">🎯 遊び方</span><button id="tut-close" class="mg-close">✕</button></div>
+      <div id="tut-body" class="mg-body"></div>
+    </div>
+  </div>
+
+  <!-- 実績トースト -->
+  <div id="toast-wrap"></div>
 
   <!-- 読み込み順序が依存関係 -->
   <script src="js/config.js"></script>

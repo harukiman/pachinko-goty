@@ -50,8 +50,9 @@
     ur.classList.toggle('need', st.needRight && st.uchikata !== 'right');
     ul.classList.toggle('need', !st.needRight && st.uchikata === 'right');
 
-    // レート/玉貸
+    // レート/倍速/玉貸
     const rs = $('#rate-select'); if (rs && +rs.value !== st.rate) rs.value = st.rate;
+    const ss = $('#speed-select'); if (ss && +ss.value !== st.speed) ss.value = st.speed;
     $('#lend').textContent = '玉貸 ' + yen(500 * st.rate);
 
     // 変動中ランプ
@@ -118,6 +119,14 @@
     sel.value = window.GAME.snapshot().rate;
     sel.addEventListener('change', () => window.GAME.setRate(+sel.value));
   }
+  function buildSpeedSelect() {
+    const sel = $('#speed-select');
+    (window.GAME.snapshot().speeds || [1, 2, 3, 5, 10, 50, 100]).forEach(s => {
+      const o = document.createElement('option'); o.value = s; o.textContent = '×' + s; sel.appendChild(o);
+    });
+    sel.value = window.GAME.snapshot().speed;
+    sel.addEventListener('change', () => window.GAME.setSpeed(+sel.value));
+  }
   function buildReliabilityInfo() {
     const R = C.PRODUCTIONS.reach.filter(r => r.kind !== 'none').map(r => `${r.label}=${Math.round(r.reliability * 100)}%`).join(' / ');
     $('#reliability').innerHTML = `<b>遊び方</b>: レート選択→「玉貸」で玉を借り、長押しで発射。電サポ中は「右打ち」！ 当りで軍資金を増やし1億円(FIRE)を目指せ。軍資金は自動保存。<br><b>リーチ信頼度</b>: ${R}`;
@@ -134,22 +143,69 @@
     } catch (_) {}
   }
 
-  let opSeen = false;
+  // 永続フラグ（初回OP/チュートリアル/演出倍速）
+  const OPKEY = 'crfl_op', TUTKEY = 'crfl_tut', FPKEY = 'crfl_fastprod';
+  let opSeen = false, baseStarted = false;
+  function loadFlags() {
+    try { opSeen = localStorage.getItem(OPKEY) === '1'; } catch (_) {}
+    try { if (localStorage.getItem(FPKEY) === '1') { window.SETTINGS.fastProduction = true; const b = $('#toggle-fastprod'); b.classList.add('active'); b.textContent = '⏩ 演出も倍速 ON'; } } catch (_) {}
+  }
+  function ensureBaseBgm() { if (baseStarted) return; baseStarted = true; if (window.AUDIO) window.AUDIO.setBaseBgm('normal'); }
+
   async function maybeOpening() {
     if (opSeen) return false;
-    opSeen = true;
-    if (window.AUDIO) window.AUDIO.setBaseBgm('normal');     // 通常時BGM開始
+    opSeen = true; try { localStorage.setItem(OPKEY, '1'); } catch (_) {}
+    ensureBaseBgm();
     if (window.SETTINGS && window.SETTINGS.story && window.CINEMA && window.STORY) {
       await window.CINEMA.play(window.STORY.opening(), { bgm: 'super', skippable: true });
-      return true;
     }
-    return false;
+    if (localStorage.getItem(TUTKEY) !== '1') { showTutorial(); try { localStorage.setItem(TUTKEY, '1'); } catch (_) {} }
+    return true;
+  }
+
+  // ===== トースト（実績解除） =====
+  function toast(name, reward) {
+    const wrap = $('#toast-wrap'); if (!wrap) return;
+    const t = document.createElement('div'); t.className = 'toast';
+    t.innerHTML = `🏆 実績解除：<b>${name}</b>${reward ? ` <b>+¥${reward.toLocaleString()}</b>` : ''}`;
+    wrap.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  // ===== 実績パネル =====
+  function openAch() {
+    const m = $('#ach-modal'), body = $('#ach-body');
+    body.innerHTML = '';
+    (window.GAME.getAchievements() || []).forEach(a => {
+      const d = document.createElement('div'); d.className = 'ach-item' + (a.unlocked ? '' : ' locked');
+      d.innerHTML = `<div><div class="ach-name">${a.unlocked ? '🏆' : '🔒'} ${a.name}</div><div class="ach-desc">${a.desc}</div></div>${a.reward ? `<div class="ach-rw">+¥${a.reward.toLocaleString()}</div>` : ''}`;
+      body.appendChild(d);
+    });
+    m.classList.remove('hidden');
+  }
+
+  // ===== チュートリアル =====
+  function showTutorial() {
+    const m = $('#tutorial'), body = $('#tut-body');
+    body.innerHTML = '';
+    const steps = [
+      'まず<b>レート</b>を選び、<b>「玉貸」</b>で軍資金を玉に替える（電サポ中以外は左打ち）。',
+      '<b>発射ボタンを長押し</b>で打ち出し。始動口入賞でデジタル図柄が回転、揃えば<b>大当り</b>！',
+      '<b>確変/時短(電サポ)中は「右打ち」</b>に切替！　右打ちしないと玉が入りません。',
+      '玉が増えたら<b>「換金」</b>で軍資金に。資金が尽きたら<b>「💼バイト」</b>で稼ごう（高給バイトや闇バイトも）。',
+      '<b>倍速</b>で待ち時間を短縮（演出は通常速度。設定で演出も倍速可）。',
+      '当りで資金を増やし<b>1億円(FIRE)</b>を目指せ！　5億・10億の特殊エンディングも。進捗は自動保存。',
+    ];
+    steps.forEach((s, i) => { const d = document.createElement('div'); d.className = 'tut-step'; d.innerHTML = `<div class="tut-no">${i + 1}</div><div class="tut-txt">${s}</div>`; body.appendChild(d); });
+    const ok = document.createElement('button'); ok.className = 'mg-btn'; ok.textContent = 'はじめる！'; ok.addEventListener('click', () => m.classList.add('hidden'));
+    body.appendChild(ok);
+    m.classList.remove('hidden');
   }
 
   function bindControls() {
     const fire = $('#fire');
     const start = async e => {
-      e.preventDefault(); window.AUDIO.resume();
+      e.preventDefault(); window.AUDIO.resume(); ensureBaseBgm();
       if (window.CINEMA && window.CINEMA.isPlaying) return;
       if (await maybeOpening()) return;
       if (e.pointerId != null && fire.setPointerCapture) { try { fire.setPointerCapture(e.pointerId); } catch (_) {} }
@@ -165,7 +221,7 @@
 
     const auto = $('#auto');
     auto.addEventListener('click', async () => {
-      window.AUDIO.resume();
+      window.AUDIO.resume(); ensureBaseBgm();
       if (window.CINEMA && window.CINEMA.isPlaying) return;
       if (await maybeOpening()) return;
       const on = !auto.classList.contains('active');
@@ -200,7 +256,21 @@
     // ムービー
     const story = $('#toggle-story');
     story.addEventListener('click', () => { const on = !window.SETTINGS.story; window.SETTINGS.story = on; story.classList.toggle('active', on); story.textContent = on ? '🎬 ムービー ON' : '🎬 ムービー OFF'; });
-    $('#replay-op').addEventListener('click', async () => { window.AUDIO.resume(); if (window.CINEMA && window.STORY && !window.CINEMA.isPlaying) await window.CINEMA.play(window.STORY.opening(), { bgm: 'super', skippable: true }); });
+    $('#replay-op').addEventListener('click', async () => { window.AUDIO.resume(); ensureBaseBgm(); if (window.CINEMA && window.STORY && !window.CINEMA.isPlaying) await window.CINEMA.play(window.STORY.opening(), { bgm: 'super', skippable: true }); });
+    $('#replay-tut').addEventListener('click', () => showTutorial());
+
+    // 演出も倍速トグル
+    const fp = $('#toggle-fastprod');
+    fp.addEventListener('click', () => {
+      const on = !window.SETTINGS.fastProduction; window.SETTINGS.fastProduction = on;
+      fp.classList.toggle('active', on); fp.textContent = on ? '⏩ 演出も倍速 ON' : '⏩ 演出も倍速 OFF';
+      try { localStorage.setItem(FPKEY, on ? '1' : '0'); } catch (_) {}
+    });
+
+    // 実績パネル
+    $('#achievements').addEventListener('click', openAch);
+    $('#ach-close').addEventListener('click', () => $('#ach-modal').classList.add('hidden'));
+    $('#tut-close').addEventListener('click', () => $('#tutorial').classList.add('hidden'));
 
     // データ削除（確認必須。それ以外で進捗はリセットされない）
     $('#data-delete').addEventListener('click', () => {
@@ -211,5 +281,5 @@
     });
   }
 
-  window.UI = { render, init() { buildSpecSelect(); buildRateSelect(); buildReliabilityInfo(); bindControls(); loadAudio(); } };
+  window.UI = { render, toast, init() { buildSpecSelect(); buildRateSelect(); buildSpeedSelect(); buildReliabilityInfo(); bindControls(); loadAudio(); loadFlags(); } };
 })();

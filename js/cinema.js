@@ -15,7 +15,8 @@
  */
 (function () {
   const $ = s => document.querySelector(s);
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const effSpeed = () => (window.SETTINGS && window.SETTINGS.fastProduction) ? (window.SPEED || 1) : 1;
+  const sleep = ms => new Promise(r => setTimeout(r, ms / effSpeed()));
   const A = () => window.AUDIO;
 
   let root, bg, fxlayer, bars, charEl, titleEl, box, nameEl, textEl, skipEl, inited = false;

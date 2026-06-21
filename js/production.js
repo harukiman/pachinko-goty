@@ -6,7 +6,9 @@
  */
 (function () {
   const $ = sel => document.querySelector(sel);
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // 演出は基本×1。設定「演出も倍速」ON時のみ倍率を適用。
+  const effSpeed = () => (window.SETTINGS && window.SETTINGS.fastProduction) ? (window.SPEED || 1) : 1;
+  const sleep = ms => new Promise(r => setTimeout(r, ms / effSpeed()));
   const A = () => window.AUDIO;
 
   let screen, flash, swarm, cutin, su, reach, telop, button, kakutei, vflash, result, confetti, message;

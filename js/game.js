@@ -8,14 +8,31 @@
   const MAX_HOLD = 4;
 
   const START_BALLS = 0;
-  const INITIAL_MONEY = 30000;        // 開始軍資金（円）
+  const INITIAL_MONEY = 50000;        // 開始軍資金（円）
   const LEND_LOT = 500;               // 1回の玉貸玉数
-  const RATES = [1, 5, 100, 1000, 10000]; // 円/玉
+  const RATES = [1, 5, 30, 50, 100, 1000, 10000]; // 円/玉
   // FIRE マイルストーン（総資産・円）
   const MILESTONES = [
     { amt: 1e8,  key: 'oku1',  level: 1 },
     { amt: 5e8,  key: 'oku5',  level: 5 },
     { amt: 1e9,  key: 'oku10', level: 10 },
+  ];
+  const SPEEDS = [1, 2, 3, 5, 10, 50, 100];   // 倍速
+
+  // 実績（早期実績は報酬で序盤の資金繰りを滑らかに）
+  const ACHIEVEMENTS = [
+    { id: 'first_hit', name: '初大当り', desc: '初めて大当りを引く', reward: 5000, cond: s => s.bigHits >= 1 },
+    { id: 'bait', name: '初バイト代', desc: 'バイトで稼ぐ', reward: 3000, cond: s => s.baitEarned },
+    { id: 'ren3', name: '3連チャン', desc: '3連チャン達成', reward: 10000, cond: s => s.maxRenchan >= 3 },
+    { id: 'ren10', name: '激アツ10連', desc: '10連チャン達成', reward: 100000, cond: s => s.maxRenchan >= 10 },
+    { id: 'kakuhen10', name: '確変マスター', desc: '確変10回', reward: 50000, cond: s => s.kakuhenCount >= 10 },
+    { id: 'rate100', name: 'ミドル級', desc: '100パチ以上で勝負', reward: 0, cond: s => s.maxRate >= 100 },
+    { id: 'rate10000', name: 'ハイローラー', desc: '10000パチに到達', reward: 0, cond: s => s.maxRate >= 10000 },
+    { id: 'man100', name: '資産100万', desc: '総資産100万円', reward: 0, cond: s => s.peakAssets >= 1e6 },
+    { id: 'man1000', name: '資産1000万', desc: '総資産1000万円', reward: 0, cond: s => s.peakAssets >= 1e7 },
+    { id: 'oku1', name: '🌅 FIRE達成', desc: '1億円でFIRE', reward: 0, cond: s => !!s.milestonesHit.oku1 },
+    { id: 'oku5', name: 'グランドマスター', desc: '5億円達成', reward: 0, cond: s => !!s.milestonesHit.oku5 },
+    { id: 'oku10', name: '伝説', desc: '10億円達成', reward: 0, cond: s => !!s.milestonesHit.oku10 },
   ];
 
   const S = {
@@ -31,12 +48,16 @@
     busy: false,        // スピン/大当り再生中
     firing: false,
     auto: false,
+    speed: 1,           // 倍速(×1..×100)
     uchikata: 'left',   // 打ち分け（left/right）。電サポ中は right が正解
     // 経済
     money: INITIAL_MONEY,   // 軍資金（円）
     rate: 1,                // 円/玉
+    maxRate: 1,             // 到達最高レート
     peakAssets: INITIAL_MONEY,
     milestonesHit: {},      // FIRE到達フラグ
+    achievements: {},       // 解除済み実績
+    baitEarned: false,      // バイト経験フラグ
     // 実機データカウンター用
     bigHits: 0,         // 大当り回数
     kakuhenCount: 0,    // 確変回数
@@ -53,8 +74,8 @@
   function save() {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
-        money: S.money, rate: S.rate, specKey: S.specKey, balls: S.balls,
-        peakAssets: S.peakAssets, milestonesHit: S.milestonesHit,
+        money: S.money, rate: S.rate, maxRate: S.maxRate, specKey: S.specKey, balls: S.balls, speed: S.speed,
+        peakAssets: S.peakAssets, milestonesHit: S.milestonesHit, achievements: S.achievements, baitEarned: S.baitEarned,
         bigHits: S.bigHits, kakuhenCount: S.kakuhenCount, maxRenchan: S.maxRenchan, spins: S.spins,
       }));
     } catch (_) {}
@@ -67,17 +88,24 @@
       if (C.SPECS[d.specKey]) { S.specKey = d.specKey; S.spec = C.SPECS[d.specKey]; }
       if (num(d.money)) S.money = d.money;
       if (RATES.includes(d.rate)) S.rate = d.rate;
+      if (RATES.includes(d.maxRate)) S.maxRate = d.maxRate;
+      if (SPEEDS.includes(d.speed)) S.speed = d.speed;
       if (num(d.balls)) S.balls = d.balls;
       if (num(d.peakAssets)) S.peakAssets = d.peakAssets;
       if (d.milestonesHit && typeof d.milestonesHit === 'object') S.milestonesHit = d.milestonesHit;
+      if (d.achievements && typeof d.achievements === 'object') S.achievements = d.achievements;
+      S.baitEarned = !!d.baitEarned;
+      S.maxRate = Math.max(S.maxRate, S.rate);
+      window.SPEED = S.speed;
       ['bigHits', 'kakuhenCount', 'maxRenchan', 'spins'].forEach(k => { if (num(d[k])) S[k] = d[k]; });
       S.startBalls = S.balls;
     } catch (_) {}
   }
   function resetSave() {
     try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
-    S.money = INITIAL_MONEY; S.rate = 1; S.balls = 0; S.peakAssets = INITIAL_MONEY;
-    S.milestonesHit = {}; S.bigHits = S.kakuhenCount = S.maxRenchan = S.spins = 0;
+    S.money = INITIAL_MONEY; S.rate = 1; S.maxRate = 1; S.balls = 0; S.peakAssets = INITIAL_MONEY;
+    S.milestonesHit = {}; S.achievements = {}; S.baitEarned = false; S.speed = 1; window.SPEED = 1;
+    S.bigHits = S.kakuhenCount = S.maxRenchan = S.spins = 0;
     S.kakuhen = S.jitan = false; S.stRemaining = 0; S.renchan = 0; S.holds = [];
     S.startBalls = 0; S.history = [];
     if (window.AUDIO) window.AUDIO.setBaseBgm('normal');
@@ -106,7 +134,7 @@
       diff: Math.floor(S.balls - S.startBalls), history: S.history, spinning: S.busy,
       money: S.money, rate: S.rate, ballValue: S.balls * S.rate, assets: A,
       profit: A - INITIAL_MONEY, peakAssets: S.peakAssets,
-      goalPct: Math.min(100, A / 1e8 * 100), rates: RATES,
+      goalPct: Math.min(100, A / 1e8 * 100), rates: RATES, speeds: SPEEDS, speed: S.speed,
       uchikata: S.uchikata, needRight: needRight(),
     };
   }
@@ -150,12 +178,13 @@
     const tick = () => {
       if (!S.firing && !S.auto) { return; }
       if (S.balls <= 0) { window.PRODUCTION.msg('玉がありません →「玉貸」で借りる(軍資金が必要)'); stopFiring(); refresh(); return; }
+      const sp = window.SPEED || 1;
       if (S.holds.length >= MAX_HOLD) {
         // 保留満タンなら発射を控える（玉節約）
-        fireTimer = setTimeout(tick, 200); return;
+        fireTimer = setTimeout(tick, 200 / sp); return;
       }
       shootBall();
-      fireTimer = setTimeout(tick, S.auto ? 130 : 150);
+      fireTimer = setTimeout(tick, (S.auto ? 130 : 150) / sp);
     };
     tick();
   }
@@ -249,6 +278,7 @@
     if (window.AUDIO) window.AUDIO.setBaseBgm(S.kakuhen ? 'kakuhen' : 'jitan'); // 確変/時短BGM
     updatePeak();
     save();
+    checkAchievements();
     await checkMilestones();   // FIRE到達チェック
     refresh();
   }
@@ -294,16 +324,43 @@
     S.balls = 0;
     if (window.AUDIO) window.AUDIO.SE.kakutei();
     updatePeak(); save(); refresh();
+    checkAchievements();
     checkMilestones();   // 換金で1億到達→エンディング
   }
   function setRate(r) {
     if (S.busy || !RATES.includes(r)) return;
     if (S.balls > 0) { S.money += S.balls * S.rate; S.balls = 0; } // 一旦換金
-    S.rate = r;
+    S.rate = r; if (r > S.maxRate) S.maxRate = r;
     S.startBalls = 0; S.history = [];
-    save(); refresh();
+    save(); refresh(); checkAchievements();
   }
-  function addMoney(n) { S.money += Math.max(0, Math.floor(n)); updatePeak(); save(); refresh(); checkMilestones(); }
+  function setSpeed(n) { if (!SPEEDS.includes(n)) return; S.speed = n; window.SPEED = n; save(); refresh(); }
+  function addMoney(n, source) {
+    S.money += Math.max(0, Math.floor(n));
+    if (source === 'bait') S.baitEarned = true;
+    updatePeak(); save(); refresh(); checkMilestones(); checkAchievements();
+  }
+
+  // 実績解除チェック（再入ガード／早期実績は報酬で序盤を滑らかに）
+  let _achBusy = false;
+  function checkAchievements() {
+    if (_achBusy) return; _achBusy = true;
+    try {
+      for (const a of ACHIEVEMENTS) {
+        if (!S.achievements[a.id] && a.cond(S)) {
+          S.achievements[a.id] = true;
+          if (a.reward) S.money += a.reward;     // addMoney経由しない＝再帰回避
+          if (window.UI && window.UI.toast) window.UI.toast(a.name, a.reward);
+          if (window.AUDIO) window.AUDIO.SE.kakutei();
+        }
+      }
+    } finally { _achBusy = false; save(); }
+  }
+  function getAchievements() { return ACHIEVEMENTS.map(a => ({ name: a.name, desc: a.desc, reward: a.reward, unlocked: !!S.achievements[a.id] })); }
+
+  // 闇バイト用：投資（道具/準備代）と保釈金
+  function spendMoney(n) { n = Math.floor(n); if (S.money < n) return false; S.money -= n; save(); refresh(); return true; }
+  function payBail() { const b = Math.min(Math.floor(S.money * 0.25), 1000000); S.money -= b; save(); refresh(); return b; }
   function setSpec(key) {
     if (!C.SPECS[key] || S.busy) return;
     S.specKey = key; S.spec = C.SPECS[key];
@@ -387,6 +444,7 @@
   }
 
   window.GAME = { init, fireStart, fireStop, setAuto, setSpec, addBalls, forcePlay,
-                  lendBalls, cashOut, setRate, addMoney, resetSave, save, setUchikata,
+                  lendBalls, cashOut, setRate, setSpeed, addMoney, resetSave, save, setUchikata,
+                  getAchievements, spendMoney, payBail, get money() { return S.money; },
                   snapshot, get isBusy() { return S.busy; } };
 })();

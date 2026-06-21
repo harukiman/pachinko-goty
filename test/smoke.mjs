@@ -28,6 +28,7 @@ function makeEl(tag = 'div') {
     },
     addEventListener: () => {}, removeEventListener: () => {},
     appendChild: ch => { el._children.push(ch); return ch; },
+    remove: () => {}, insertBefore: ch => { el._children.push(ch); return ch; },
     setAttribute: () => {}, getAttribute: () => null,
     getContext: () => fakeCtx,
     querySelector: sel => el._q ? el._q(sel) : makeEl(),
