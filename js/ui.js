@@ -269,16 +269,14 @@
     fire.addEventListener('blur', () => window.GAME.fireStop());
 
     const auto = $('#auto');
-    auto.addEventListener('click', async () => {
+    auto.addEventListener('click', () => {
       window.AUDIO.resume(); ensureBaseBgm();
       const turningOn = !auto.classList.contains('active');
-      if (turningOn) {                                  // ONにする時だけ演出/OPを尊重
-        if (window.CINEMA && window.CINEMA.isPlaying) return;
-        if (await maybeOpening()) return;
-      }
+      // 演出/OP中でも必ずトグルを即反映（反応しない問題の対策）。発射はゲーム側が演出中は待機。
       auto.classList.toggle('active', turningOn);
       auto.textContent = turningOn ? 'オート ON' : 'オート OFF';
-      window.GAME.setAuto(turningOn);                   // OFFは常に即時反映
+      window.GAME.setAuto(turningOn);
+      if (turningOn) maybeOpening();                    // 初回OPは裏で（オートは既に有効）
     });
 
     // 打ち分け

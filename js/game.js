@@ -291,6 +291,8 @@
     if (window.AUDIO) window.AUDIO.resume();
     const tick = () => {
       if (!S.firing && !S.auto) { return; }
+      // ムービー(ストーリー/OP)再生中は発射を待機（演出が終わったら自動で続行）
+      if (window.CINEMA && window.CINEMA.isPlaying) { fireTimer = setTimeout(tick, 200); return; }
       if (S.balls <= 0) { window.PRODUCTION.msg('玉がありません →「玉貸」で借りる(軍資金が必要)'); stopFiring(); refresh(); return; }
       const sp = window.SPEED || 1;
       if (S.holds.length >= MAX_HOLD) {
@@ -455,6 +457,7 @@
     S.money -= lot * S.rate;
     S.balls += lot;
     if (window.AUDIO) window.AUDIO.SE.start();
+    if (S.auto) fireStart();   // オート中に球切れ→玉貸で補充したら自動で発射再開
     save(); refresh();
     return { ok: true, lot };
   }

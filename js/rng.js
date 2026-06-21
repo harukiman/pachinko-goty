@@ -147,7 +147,7 @@
   }
 
   return {
-    setRandom, mulberry32, drawHit, drawKakuhen,
+    setRandom, mulberry32, drawHit, drawKakuhen, drawRounds,
     pickCategory, pickProduction, pickStopSymbols,
   };
 });
