@@ -38,21 +38,21 @@ const KAKUHEN_SYMBOLS = ['doya', 'legend', 'black'];
 // ※実機よりも大幅に甘め（当たりやすい）設定。
 const SPECS = {
   amadeji: {
-    name: '激甘デジ', normalOdds: 65, kakuhenOdds: 28,
-    kakuhenRate: 0.55, stCount: 50, rounds: 5, payoutPerRound: 80,
-    reachRate: 0.30, ceiling: 450,
+    name: '甘デジ', normalOdds: 58, kakuhenOdds: 26,
+    kakuhenRate: 0.58, stCount: 50, rounds: 5, payoutPerRound: 80,
+    reachRate: 0.30, ceiling: 420,
     roundTable: [{ r: 3, w: 35 }, { r: 4, w: 30 }, { r: 5, w: 25 }, { r: 8, w: 10 }],
   },
   light: {
-    name: 'ライト', normalOdds: 130, kakuhenOdds: 45,
-    kakuhenRate: 0.65, stCount: 90, rounds: 8, payoutPerRound: 100,
-    reachRate: 0.26, ceiling: 700,
+    name: 'ライトミドル', normalOdds: 118, kakuhenOdds: 42,
+    kakuhenRate: 0.67, stCount: 90, rounds: 8, payoutPerRound: 100,
+    reachRate: 0.26, ceiling: 650,
     roundTable: [{ r: 4, w: 30 }, { r: 6, w: 25 }, { r: 8, w: 25 }, { r: 10, w: 15 }, { r: 16, w: 5 }],
   },
   middle: {
-    name: 'ミドル', normalOdds: 280, kakuhenOdds: 62,
-    kakuhenRate: 0.70, stCount: 110, rounds: 10, payoutPerRound: 160,
-    reachRate: 0.22, ceiling: 900,
+    name: 'ミドル', normalOdds: 250, kakuhenOdds: 58,
+    kakuhenRate: 0.74, stCount: 110, rounds: 10, payoutPerRound: 160,
+    reachRate: 0.22, ceiling: 850,
     roundTable: [{ r: 3, w: 5 }, { r: 5, w: 25 }, { r: 7, w: 25 }, { r: 10, w: 30 }, { r: 16, w: 15 }],
   },
 };
